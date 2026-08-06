@@ -248,7 +248,7 @@
             })
                 .then(res => res.json())
                 .then(data => {
-                    document.getElementById('totalPessoas').textContent = data.length;
+                    document.getElementById('totalClientes').textContent = data.length;
 
                     const somaIdade = data.reduce((sum, pessoa) => sum + pessoa.idade, 0);
                     const media = data.length > 0 ? Math.round(somaIdade / data.length) : 0;
