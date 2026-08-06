@@ -47,7 +47,9 @@ class LocacaoItemController extends Controller
         $userId = $request->user()->id;
         $now = now();
 
+        // Faturamento: apenas locações finalizadas
         $mesAtual = LocacaoItem::where('user_id', $userId)
+            ->where('status', 'finalizado')
             ->whereMonth('inicio', $now->month)
             ->whereYear('inicio', $now->year)
             ->sum('valor');
@@ -56,6 +58,7 @@ class LocacaoItemController extends Controller
         for ($i = 5; $i >= 0; $i--) {
             $date = $now->copy()->subMonths($i);
             $total = LocacaoItem::where('user_id', $userId)
+                ->where('status', 'finalizado')
                 ->whereMonth('inicio', $date->month)
                 ->whereYear('inicio', $date->year)
                 ->sum('valor');
@@ -66,9 +69,20 @@ class LocacaoItemController extends Controller
             ];
         }
 
+        // Cobranças pendentes: locações com status 'cobranca'
+        $cobrancas = LocacaoItem::with(['item', 'cliente'])
+            ->where('user_id', $userId)
+            ->where('status', 'cobranca')
+            ->orderBy('fim', 'asc')
+            ->get();
+
+        $totalCobrancas = $cobrancas->sum('valor');
+
         return response()->json([
             'mes_atual' => round((float) $mesAtual, 2),
             'meses' => $meses,
+            'cobrancas' => $cobrancas,
+            'total_cobrancas' => round((float) $totalCobrancas, 2),
         ]);
     }
 
@@ -94,7 +108,7 @@ class LocacaoItemController extends Controller
             'valor'      => 'nullable|numeric|min:0',
             'inicio'     => 'required|date',
             'fim'        => 'required|date|after:inicio',
-            'status'     => 'nullable|in:ativo,finalizado,cancelado',
+            'status'     => 'nullable|in:ativo,cobranca,finalizado,cancelado',
         ]);
 
         $locacao = LocacaoItem::create([
@@ -126,7 +140,7 @@ class LocacaoItemController extends Controller
             'valor'      => 'nullable|numeric|min:0',
             'inicio'     => 'required|date',
             'fim'        => 'required|date|after:inicio',
-            'status'     => 'nullable|in:ativo,finalizado,cancelado',
+            'status'     => 'nullable|in:ativo,cobranca,finalizado,cancelado',
         ]);
 
         $locacao->update([
@@ -163,7 +177,7 @@ class LocacaoItemController extends Controller
         }
 
         $request->validate([
-            'status' => 'required|in:ativo,finalizado,cancelado',
+            'status' => 'required|in:ativo,cobranca,finalizado,cancelado',
         ]);
 
         $dataToUpdate = ['status' => $request->status];

@@ -69,6 +69,7 @@
         <label class="block text-gray-700 font-medium mb-1">Status</label>
         <select v-model="form.status" class="w-full border rounded-lg p-2 focus:ring focus:ring-amber-300">
           <option value="ativo">Ativo</option>
+          <option value="cobranca">Cobrança</option>
           <option value="finalizado">Finalizado</option>
           <option value="cancelado">Cancelado</option>
         </select>
