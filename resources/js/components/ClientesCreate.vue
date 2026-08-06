@@ -25,6 +25,18 @@
         <p v-if="erros.documento" class="text-red-600 text-sm mt-1">{{ erros.documento[0] }}</p>
       </div>
 
+      <div>
+        <label class="block text-gray-700 font-medium mb-1">Endereço</label>
+        <input v-model="cliente.endereco" type="text" class="w-full border rounded-lg p-2 focus:ring focus:ring-blue-300 focus:border-blue-400" placeholder="Rua, número, bairro, cidade...">
+        <p v-if="erros.endereco" class="text-red-600 text-sm mt-1">{{ erros.endereco[0] }}</p>
+      </div>
+
+      <div>
+        <label class="block text-gray-700 font-medium mb-1">Telefone</label>
+        <input v-model="cliente.telefone" type="text" class="w-full border rounded-lg p-2 focus:ring focus:ring-blue-300 focus:border-blue-400" placeholder="(00) 00000-0000">
+        <p v-if="erros.telefone" class="text-red-600 text-sm mt-1">{{ erros.telefone[0] }}</p>
+      </div>
+
       <div class="flex justify-end gap-4">
         <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
           {{ id > 0 ? 'Atualizar Cliente' : 'Salvar Cliente' }}
@@ -38,7 +50,7 @@
 export default {
   props: { id: { type: Number, default: 0 } },
   data() {
-    return { cliente: { nome: '', idade: '', documento: '' }, erros: {} }
+    return { cliente: { nome: '', idade: '', documento: '', endereco: '', telefone: '' }, erros: {} }
   },
   mounted() {
     if (this.id > 0) {
@@ -47,7 +59,7 @@ export default {
       if (token) headers['Authorization'] = `Bearer ${token}`;
       fetch(`/api/clientes/${this.id}`, { headers })
         .then(res => res.json())
-        .then(data => { this.cliente = { nome: data.nome, idade: data.idade, documento: data.documento }; });
+        .then(data => { this.cliente = { nome: data.nome, idade: data.idade, documento: data.documento, endereco: data.endereco || '', telefone: data.telefone || '' }; });
     }
   },
   methods: {

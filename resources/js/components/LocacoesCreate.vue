@@ -16,10 +16,15 @@
 
       <div>
         <label class="block text-gray-700 font-medium mb-1">Cliente Responsável</label>
-        <select v-model="form.cliente_id" class="w-full border rounded-lg p-2 focus:ring focus:ring-amber-300">
-          <option value="">Selecione um cliente</option>
-          <option v-for="c in clientes" :key="c.id" :value="c.id">{{ c.nome }}</option>
-        </select>
+        <div class="flex items-center gap-3">
+          <select v-model="form.cliente_id" class="w-[60%] border rounded-lg p-2 focus:ring focus:ring-amber-300">
+            <option value="">Selecione um cliente</option>
+            <option v-for="c in clientes" :key="c.id" :value="c.id">{{ c.nome }}</option>
+          </select>
+          <span v-if="clienteSelecionado && clienteSelecionado.telefone" class="w-[40%] text-gray-600 text-sm">
+            📞 {{ clienteSelecionado.telefone }}
+          </span>
+        </div>
         <p v-if="erros.cliente_id" class="text-red-600 text-sm mt-1">{{ erros.cliente_id[0] }}</p>
       </div>
 
@@ -33,13 +38,13 @@
       <div>
         <label class="block text-gray-700 font-medium mb-1">Valor (R$)</label>
         <div class="flex items-center gap-2">
+          <input v-model="form.valor" type="number" step="0.01" min="0"
+            class="flex-1 border rounded-lg p-2 focus:ring focus:ring-amber-300"
+            placeholder="0,00">
           <button type="button" @click="ajustarValor(-5)"
             class="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition font-bold">
             -5
           </button>
-          <input v-model="form.valor" type="number" step="0.01" min="0"
-            class="flex-1 border rounded-lg p-2 focus:ring focus:ring-amber-300"
-            placeholder="0,00">
           <button type="button" @click="ajustarValor(5)"
             class="bg-green-500 text-white px-3 py-2 rounded-lg hover:bg-green-600 transition font-bold">
             +5
@@ -91,6 +96,12 @@ import '@vuepic/vue-datepicker/dist/main.css';
 export default {
   components: { VueDatePicker },
   props: { id: { type: Number, default: 0 } },
+  computed: {
+    clienteSelecionado() {
+      if (!this.form.cliente_id) return null;
+      return this.clientes.find(c => c.id == this.form.cliente_id) || null;
+    }
+  },
   data() {
     return {
       form: { item_id: '', cliente_id: '', location: '', valor: '', inicio: null, fim: null, status: 'ativo' },

@@ -37,6 +37,8 @@ class ClienteController extends Controller
             'nome' => 'required|string|max:255',
             'idade' => 'required|integer',
             'documento' => 'required|string|unique:clientes',
+            'endereco' => 'nullable|string|max:500',
+            'telefone' => 'nullable|string|max:20',
             'foto' => 'nullable|string',
         ]);
 
@@ -53,6 +55,8 @@ class ClienteController extends Controller
             'nome' => $request->nome,
             'idade' => $request->idade,
             'documento' => $request->documento,
+            'endereco' => $request->endereco,
+            'telefone' => $request->telefone,
             'foto' => $path,
         ]);
 
@@ -71,6 +75,8 @@ class ClienteController extends Controller
             'nome' => 'required|string|max:255',
             'idade' => 'required|integer',
             'documento' => "required|string|unique:clientes,documento,$id",
+            'endereco' => 'nullable|string|max:500',
+            'telefone' => 'nullable|string|max:20',
             'foto' => 'nullable|string',
         ]);
 
@@ -86,6 +92,8 @@ class ClienteController extends Controller
             'nome' => $request->nome,
             'idade' => $request->idade,
             'documento' => $request->documento,
+            'endereco' => $request->endereco,
+            'telefone' => $request->telefone,
             'foto' => $path,
         ]);
 

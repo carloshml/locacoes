@@ -41,6 +41,7 @@
           <select v-model="filtros.status" class="border rounded-lg px-3 py-2 text-sm">
             <option value="">Todos os status</option>
             <option value="ativo">Ativo</option>
+            <option value="cobranca">Cobrança</option>
             <option value="finalizado">Finalizado</option>
             <option value="cancelado">Cancelado</option>
           </select>
@@ -136,7 +137,7 @@
           <tbody class="divide-y divide-gray-200">
             <tr v-for="loc in paginatedLocacoes" :key="loc.id" class="hover:bg-gray-50 transition-colors">
               <td class="px-4 py-3 font-medium text-gray-900">{{ loc.item ? loc.item.name : '—' }}</td>
-              <td class="px-4 py-3 text-gray-700">{{ loc.cliente ? loc.cliente.nome : '—' }}</td>
+              <td class="px-4 py-3 text-gray-700">{{ loc.cliente ? loc.cliente.nome : '—' }} <span v-if="loc.cliente && loc.cliente.telefone" class="text-gray-500 text-sm">· {{ loc.cliente.telefone }}</span></td>
               <td class="px-4 py-3 text-gray-700">{{ loc.location }}</td>
               <td class="px-4 py-3 text-gray-600 text-sm">{{ formatDate(loc.inicio) }}</td>
               <td class="px-4 py-3 text-gray-600 text-sm">{{ formatDate(loc.fim) }}</td>
@@ -198,6 +199,13 @@ import '@vuepic/vue-datepicker/dist/main.css';
 export default {
   components: { VueDatePicker },
   data() {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    const pad = (n) => String(n).padStart(2, '0');
+    const inicioMes = `${firstDay.getFullYear()}-${pad(firstDay.getMonth() + 1)}-01 00:00:00`;
+    const fimMes = `${lastDay.getFullYear()}-${pad(lastDay.getMonth() + 1)}-${pad(lastDay.getDate())} 23:59:00`;
+
     return {
       locacoes: [],
       clientes: [],
@@ -213,8 +221,8 @@ export default {
         input: 'dd.MM.yyyy - HH:mm'
       },
       filtros: {
-        inicio: null,
-        fim: null,
+        inicio: inicioMes,
+        fim: fimMes,
         cliente_id: '',
         item_id: '',
         status: ''
