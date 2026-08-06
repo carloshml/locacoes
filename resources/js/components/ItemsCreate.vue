@@ -12,6 +12,12 @@
       </div>
 
       <div>
+        <label class="block text-gray-700 font-medium mb-1">Valor (R$)</label>
+        <input v-model="item.valor" type="number" step="0.01" min="0" class="w-full border rounded-lg p-2 focus:ring focus:ring-teal-300 focus:border-teal-400" placeholder="0,00">
+        <p v-if="erros.valor" class="text-red-600 text-sm mt-1">{{ erros.valor[0] }}</p>
+      </div>
+
+      <div>
         <label class="block text-gray-700 font-medium mb-1">Descrição</label>
         <textarea v-model="item.descricao" rows="3" class="w-full border rounded-lg p-2 focus:ring focus:ring-teal-300 focus:border-teal-400" placeholder="Descreva o item..."></textarea>
         <p v-if="erros.descricao" class="text-red-600 text-sm mt-1">{{ erros.descricao[0] }}</p>
@@ -30,7 +36,7 @@
 export default {
   props: { id: { type: Number, default: 0 } },
   data() {
-    return { item: { name: '', descricao: '' }, erros: {} }
+    return { item: { name: '', valor: '', descricao: '' }, erros: {} }
   },
   mounted() {
     if (this.id > 0) this.fetchItem();
@@ -47,7 +53,7 @@ export default {
     fetchItem() {
       fetch(`/api/items/${this.id}`, { headers: this.getHeaders() })
         .then(res => res.json())
-        .then(data => { this.item = { name: data.name, descricao: data.descricao || '' }; });
+        .then(data => { this.item = { name: data.name, valor: data.valor ?? '', descricao: data.descricao || '' }; });
     },
     salvarItem() {
       const url = this.id > 0 ? `/api/items/${this.id}` : '/api/items';

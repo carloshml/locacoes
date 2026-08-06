@@ -14,6 +14,16 @@
                     Últimos Clientes
                 </button>
                 <button 
+                    @click="activeTab = 'locacoes'"
+                    :class="[
+                        'px-4 py-2 rounded-lg transition',
+                        activeTab === 'locacoes' 
+                            ? 'bg-orange-600 text-white' 
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ]">
+                    Últimas Locações
+                </button>
+                <button 
                     @click="activeTab = 'usuarios'"
                     :class="[
                         'px-4 py-2 rounded-lg transition',
@@ -43,6 +53,34 @@
                 </li>
             </ul>
             <p v-else class="text-gray-500 text-center py-8">Nenhum cliente cadastrado ainda.</p>
+        </div>
+
+        <!-- Lista de Locações -->
+        <div v-if="activeTab === 'locacoes'">
+            <ul v-if="locacoes.length > 0" class="space-y-3">
+                <li v-for="locacao in locacoes" :key="locacao.id"
+                    class="flex justify-between items-center bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition">
+                    <a :href="`/locacoes/${locacao.id}`" class="flex-1">
+                        <div>
+                            <p class="text-gray-900 font-medium">
+                                {{ locacao.item ? locacao.item.name : 'Item removido' }}
+                            </p>
+                            <p class="text-gray-600 text-sm">
+                                Cliente: {{ locacao.cliente ? locacao.cliente.nome : 'Cliente removido' }}
+                            </p>
+                            <p class="text-gray-500 text-xs">
+                                {{ formatDate(locacao.inicio) }} → {{ formatDate(locacao.fim) }} · {{ locacao.location }}
+                            </p>
+                        </div>
+                    </a>
+                    <div class="flex gap-2">
+                        <span :class="statusClass(locacao.status)" class="px-2 py-1 text-xs rounded-full">
+                            {{ locacao.status }}
+                        </span>
+                    </div>
+                </li>
+            </ul>
+            <p v-else class="text-gray-500 text-center py-8">Nenhuma locação registrada ainda.</p>
         </div>
 
         <!-- Lista de Usuários -->
@@ -81,12 +119,14 @@ export default {
         return { 
             clientes: [],
             usuarios: [],
+            locacoes: [],
             activeTab: 'clientes'
         }
     },
     mounted() {
         this.fetchUltimosClientes();
         this.fetchUltimosUsuarios();
+        this.fetchUltimasLocacoes();
     },
     methods: {
         fetchUltimosClientes() {
@@ -133,6 +173,45 @@ export default {
                     this.usuarios = data.slice(-5).reverse();
                 })
                 .catch(err => console.error(err));
+        },
+
+        fetchUltimasLocacoes() {
+            const token = localStorage.getItem('api_token');
+            const headers = {};
+
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            fetch('/api/locacoes', { headers })
+                .then(res => {
+                    if (res.status === 401) {
+                        localStorage.removeItem('api_token');
+                        window.location.href = '/login';
+                        throw new Error('Não autorizado');
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    // A API já retorna ordenado por inicio desc
+                    this.locacoes = data.slice(0, 5);
+                })
+                .catch(err => console.error(err));
+        },
+
+        formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        },
+
+        statusClass(status) {
+            switch (status) {
+                case 'ativo': return 'bg-blue-100 text-blue-700';
+                case 'finalizado': return 'bg-green-100 text-green-700';
+                case 'cancelado': return 'bg-red-100 text-red-700';
+                default: return 'bg-gray-100 text-gray-700';
+            }
         },
 
         formatDocument(documento) {

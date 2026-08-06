@@ -8,11 +8,12 @@ class LocacaoItem extends Model
 {
     protected $table = 'locacao_item';
 
-    protected $fillable = ['item_id', 'cliente_id', 'location', 'inicio', 'fim', 'status'];
+    protected $fillable = ['item_id', 'cliente_id', 'location', 'valor', 'inicio', 'fim', 'status'];
 
     protected $casts = [
         'inicio' => 'datetime',
         'fim' => 'datetime',
+        'valor' => 'decimal:2',
     ];
 
     public function item()

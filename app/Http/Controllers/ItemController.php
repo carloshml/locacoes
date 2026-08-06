@@ -15,7 +15,7 @@ class ItemController extends Controller
 
     public function getById($id)
     {
-        $item = Item::with('locacoes.pessoa')->find($id);
+        $item = Item::with('locacoes.cliente')->find($id);
 
         if (!$item) {
             return response()->json(['message' => 'Item não encontrado'], 404);
@@ -28,11 +28,13 @@ class ItemController extends Controller
     {
         $request->validate([
             'name'      => 'required|string|max:255',
+            'valor'     => 'nullable|numeric|min:0',
             'descricao' => 'nullable|string|max:500',
         ]);
 
         $item = Item::create([
             'name'      => $request->name,
+            'valor'     => $request->valor ?? 0,
             'descricao' => $request->descricao,
         ]);
 
@@ -49,11 +51,13 @@ class ItemController extends Controller
 
         $request->validate([
             'name'      => 'required|string|max:255',
+            'valor'     => 'nullable|numeric|min:0',
             'descricao' => 'nullable|string|max:500',
         ]);
 
         $item->update([
             'name'      => $request->name,
+            'valor'     => $request->valor ?? $item->valor,
             'descricao' => $request->descricao,
         ]);
 

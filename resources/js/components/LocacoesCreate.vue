@@ -7,9 +7,9 @@
     <form @submit.prevent="salvar" class="space-y-5">
       <div>
         <label class="block text-gray-700 font-medium mb-1">Item</label>
-        <select v-model="form.item_id" class="w-full border rounded-lg p-2 focus:ring focus:ring-amber-300">
+        <select v-model="form.item_id" @change="onItemChange" class="w-full border rounded-lg p-2 focus:ring focus:ring-amber-300">
           <option value="">Selecione um item</option>
-          <option v-for="item in items" :key="item.id" :value="item.id">{{ item.name }}</option>
+          <option v-for="item in items" :key="item.id" :value="item.id">{{ item.name }} — R$ {{ Number(item.valor || 0).toFixed(2) }}</option>
         </select>
         <p v-if="erros.item_id" class="text-red-600 text-sm mt-1">{{ erros.item_id[0] }}</p>
       </div>
@@ -28,6 +28,24 @@
         <input v-model="form.location" type="text" class="w-full border rounded-lg p-2 focus:ring focus:ring-amber-300"
           placeholder="Ex: Sala 301, Prédio A, Depósito">
         <p v-if="erros.location" class="text-red-600 text-sm mt-1">{{ erros.location[0] }}</p>
+      </div>
+
+      <div>
+        <label class="block text-gray-700 font-medium mb-1">Valor (R$)</label>
+        <div class="flex items-center gap-2">
+          <button type="button" @click="ajustarValor(-5)"
+            class="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition font-bold">
+            -5
+          </button>
+          <input v-model="form.valor" type="number" step="0.01" min="0"
+            class="flex-1 border rounded-lg p-2 focus:ring focus:ring-amber-300"
+            placeholder="0,00">
+          <button type="button" @click="ajustarValor(5)"
+            class="bg-green-500 text-white px-3 py-2 rounded-lg hover:bg-green-600 transition font-bold">
+            +5
+          </button>
+        </div>
+        <p v-if="erros.valor" class="text-red-600 text-sm mt-1">{{ erros.valor[0] }}</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -74,7 +92,7 @@ export default {
   props: { id: { type: Number, default: 0 } },
   data() {
     return {
-      form: { item_id: '', cliente_id: '', location: '', inicio: null, fim: null, status: 'ativo' },
+      form: { item_id: '', cliente_id: '', location: '', valor: '', inicio: null, fim: null, status: 'ativo' },
       dateFormats: {
         input: 'dd.MM.yyyy - HH:mm'
       },
@@ -104,6 +122,18 @@ export default {
         this.clientes = clientes;
       });
     },
+    onItemChange() {
+      if (this.id > 0) return; // Não sobrescrever valor ao editar
+      const item = this.items.find(i => i.id == this.form.item_id);
+      if (item) {
+        this.form.valor = Number(item.valor || 0);
+      }
+    },
+    ajustarValor(delta) {
+      const atual = Number(this.form.valor) || 0;
+      const novo = atual + delta;
+      this.form.valor = novo < 0 ? 0 : novo;
+    },
     fetchData() {
       fetch(`/api/locacoes/${this.id}`, { headers: this.getHeaders() })
         .then(r => r.json())
@@ -112,6 +142,7 @@ export default {
             item_id: data.item_id,
             cliente_id: data.cliente_id,
             location: data.location,
+            valor: data.valor ?? '',
             inicio: data.inicio || null,
             fim: data.fim || null,
             status: data.status
