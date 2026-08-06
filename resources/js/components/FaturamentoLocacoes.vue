@@ -55,7 +55,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="c in cobrancas" :key="c.id" class="border-b last:border-0 hover:bg-amber-50 transition">
+            <tr v-for="c in cobrancas" :key="c.id" class="border-b last:border-0 hover:bg-amber-50 transition cursor-pointer" @click="verLocacao(c.id)">
               <td class="py-3 text-gray-800">{{ c.item ? c.item.name : '—' }}</td>
               <td class="py-3 text-gray-800">{{ c.cliente ? c.cliente.nome : '—' }}</td>
               <td class="py-3 text-gray-500 text-sm">{{ formatDate(c.inicio) }} → {{ formatDate(c.fim) }}</td>
@@ -177,6 +177,9 @@ export default {
     getBarWidth(total) {
       if (this.maxMes === 0) return 0;
       return Math.round((total / this.maxMes) * 100);
+    },
+    verLocacao(id) {
+      window.location.href = `/locacoes/${id}`;
     }
   }
 }

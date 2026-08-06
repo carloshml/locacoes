@@ -122,6 +122,10 @@
                                 class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition">
                                 Meu Perfil
                             </a>
+                            <a href="{{ route('faturamento') }}"
+                                class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition">
+                                Faturamento
+                            </a>
                         </div>
                     @endauth
                 </div>
