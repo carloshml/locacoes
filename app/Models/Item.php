@@ -6,7 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Item extends Model
 {
-    protected $fillable = ['name', 'valor', 'descricao'];
+    protected $fillable = ['user_id', 'name', 'valor', 'descricao'];
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class);
+    }
 
     public function locacoes()
     {

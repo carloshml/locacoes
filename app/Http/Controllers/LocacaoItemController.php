@@ -9,7 +9,8 @@ class LocacaoItemController extends Controller
 {
     public function list(Request $request)
     {
-        $query = LocacaoItem::with(['item', 'cliente']);
+        $query = LocacaoItem::with(['item', 'cliente'])
+            ->where('user_id', $request->user()->id);
 
         if ($request->filled('inicio')) {
             $query->where('inicio', '>=', $request->inicio);
@@ -35,9 +36,47 @@ class LocacaoItemController extends Controller
         return response()->json($locacoes);
     }
 
-    public function getById($id)
+    public function faturamento(Request $request)
     {
-        $locacao = LocacaoItem::with(['item', 'cliente'])->find($id);
+        $mesesPt = [
+            1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'Março', 4 => 'Abril',
+            5 => 'Maio', 6 => 'Junho', 7 => 'Julho', 8 => 'Agosto',
+            9 => 'Setembro', 10 => 'Outubro', 11 => 'Novembro', 12 => 'Dezembro',
+        ];
+
+        $userId = $request->user()->id;
+        $now = now();
+
+        $mesAtual = LocacaoItem::where('user_id', $userId)
+            ->whereMonth('inicio', $now->month)
+            ->whereYear('inicio', $now->year)
+            ->sum('valor');
+
+        $meses = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $date = $now->copy()->subMonths($i);
+            $total = LocacaoItem::where('user_id', $userId)
+                ->whereMonth('inicio', $date->month)
+                ->whereYear('inicio', $date->year)
+                ->sum('valor');
+            $meses[] = [
+                'mes' => $date->format('m/Y'),
+                'nome' => $mesesPt[$date->month] . ' ' . $date->year,
+                'total' => round((float) $total, 2),
+            ];
+        }
+
+        return response()->json([
+            'mes_atual' => round((float) $mesAtual, 2),
+            'meses' => $meses,
+        ]);
+    }
+
+    public function getById(Request $request, $id)
+    {
+        $locacao = LocacaoItem::with(['item', 'cliente'])
+            ->where('user_id', $request->user()->id)
+            ->find($id);
 
         if (!$locacao) {
             return response()->json(['message' => 'Locação não encontrada'], 404);
@@ -59,6 +98,7 @@ class LocacaoItemController extends Controller
         ]);
 
         $locacao = LocacaoItem::create([
+            'user_id'    => $request->user()->id,
             'item_id'    => $request->item_id,
             'cliente_id' => $request->cliente_id,
             'location'   => $request->location,
@@ -73,7 +113,7 @@ class LocacaoItemController extends Controller
 
     public function update(Request $request, string $id)
     {
-        $locacao = LocacaoItem::find($id);
+        $locacao = LocacaoItem::where('user_id', $request->user()->id)->find($id);
 
         if (!$locacao) {
             return response()->json(['message' => 'Locação não encontrada'], 404);
@@ -102,9 +142,9 @@ class LocacaoItemController extends Controller
         return response()->json($locacao->load(['item', 'cliente']));
     }
 
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
-        $locacao = LocacaoItem::find($id);
+        $locacao = LocacaoItem::where('user_id', $request->user()->id)->find($id);
 
         if (!$locacao) {
             return response()->json(['message' => 'Locação não encontrada'], 404);
@@ -116,7 +156,7 @@ class LocacaoItemController extends Controller
 
     public function updateStatus(Request $request, string $id)
     {
-        $locacao = LocacaoItem::find($id);
+        $locacao = LocacaoItem::where('user_id', $request->user()->id)->find($id);
 
         if (!$locacao) {
             return response()->json(['message' => 'Locação não encontrada'], 404);
@@ -128,16 +168,9 @@ class LocacaoItemController extends Controller
 
         $dataToUpdate = ['status' => $request->status];
 
-        // Se o status for 'finalizado', atualiza também o campo 'fim' com a data/hora atual
         if ($request->status === 'finalizado') {
             $dataToUpdate['fim'] = now();
         }
-
-        // Se o status for 'ativo' e a locação estava finalizada, podemos opcionalmente redefinir o fim? 
-        // (Comentado - depende da regra de negócio)
-        // if ($request->status === 'ativo' && $locacao->status === 'finalizado') {
-        //     $dataToUpdate['fim'] = null; // ou manter a data anterior
-        // }
 
         $locacao->update($dataToUpdate);
 

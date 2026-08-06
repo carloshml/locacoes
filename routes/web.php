@@ -75,6 +75,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/locacoes/{id}', function ($id) {
         return view('locacao-read', ['id' => $id]);
     })->name('locacoes.show');
+
+    // Faturamento
+    Route::view('/faturamento', 'faturamento')->name('faturamento');
     
     Route::get('/', function () {
         return redirect()->route('dashboard');

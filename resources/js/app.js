@@ -19,6 +19,7 @@ import ItemsRead from './components/ItemsRead.vue';
 import LocacoesList from './components/LocacoesList.vue';
 import LocacoesCreate from './components/LocacoesCreate.vue';
 import LocacaoRead from './components/LocacaoRead.vue';
+import FaturamentoLocacoes from './components/FaturamentoLocacoes.vue';
 
 // Função helper para fazer fetch com CSRF
 window.apiFetch = function(url, options = {}) {
@@ -65,5 +66,6 @@ app.component('items-read', ItemsRead);
 app.component('locacoes-list', LocacoesList);
 app.component('locacoes-create', LocacoesCreate);
 app.component('locacao-read', LocacaoRead);
+app.component('faturamento-locacoes', FaturamentoLocacoes);
 
 app.mount('#app');

@@ -6,7 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Cliente extends Model
 {
-    protected $fillable = ['nome', 'idade', 'documento', 'foto'];
+    protected $fillable = ['user_id', 'nome', 'idade', 'documento', 'foto'];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function locacoes()
     {

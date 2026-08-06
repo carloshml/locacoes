@@ -8,13 +8,18 @@ class LocacaoItem extends Model
 {
     protected $table = 'locacao_item';
 
-    protected $fillable = ['item_id', 'cliente_id', 'location', 'valor', 'inicio', 'fim', 'status'];
+    protected $fillable = ['user_id', 'item_id', 'cliente_id', 'location', 'valor', 'inicio', 'fim', 'status'];
 
     protected $casts = [
         'inicio' => 'datetime',
         'fim' => 'datetime',
         'valor' => 'decimal:2',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function item()
     {

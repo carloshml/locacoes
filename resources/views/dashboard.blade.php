@@ -226,6 +226,31 @@
                         </div>
                     </a>
 
+                    <!-- Faturamento Card -->
+                    <a href="{{ route('faturamento') }}" class="group">
+                        <div
+                            class="bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-emerald-500 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                            <div
+                                class="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-lg w-16 h-16 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">Faturamento</h3>
+                            <p class="text-gray-600">Total de valores das locações do mês e histórico</p>
+                            <div
+                                class="mt-4 text-emerald-600 font-semibold flex items-center gap-2 group-hover:gap-3 transition-all">
+                                Visualizar
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                    </a>
+
 
 
 

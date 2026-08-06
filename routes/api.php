@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ItemController;
@@ -11,8 +12,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rotas de Clientes
     Route::prefix('clientes')->group(function () {
         Route::get('/', [ClienteController::class, 'list']);
-        Route::get('/stats', function() {
-            $clientes = \App\Models\Cliente::all();
+        Route::get('/stats', function(Request $request) {
+            $clientes = \App\Models\Cliente::where('user_id', $request->user()->id)->get();
             return response()->json([
                 'total' => $clientes->count(),
                 'media_idade' => $clientes->avg('idade'),
@@ -49,6 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rotas de Locação de Item
     Route::prefix('locacoes')->group(function () {
         Route::get('/', [LocacaoItemController::class, 'list']);
+        Route::get('/faturamento', [LocacaoItemController::class, 'faturamento']);
         Route::get('/{id}', [LocacaoItemController::class, 'getById']);
         Route::post('/', [LocacaoItemController::class, 'store']);
         Route::put('/{id}', [LocacaoItemController::class, 'update']);

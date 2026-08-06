@@ -8,21 +8,21 @@ use Illuminate\Support\Facades\Storage;
 
 class ClienteController extends Controller
 {
-    public function list()
+    public function list(Request $request)
     {
-        $clientes = Cliente::all();
+        $clientes = Cliente::where('user_id', $request->user()->id)->get();
         return response()->json($clientes);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $clientes = Cliente::all();
+        $clientes = Cliente::where('user_id', $request->user()->id)->get();
         return view('clientes', compact('clientes'));
     }
 
-    public function getById($id)
+    public function getById(Request $request, $id)
     {
-        $cliente = Cliente::find($id);
+        $cliente = Cliente::where('user_id', $request->user()->id)->find($id);
 
         if (!$cliente) {
             return response()->json(['message' => 'Cliente não encontrado'], 404);
@@ -48,17 +48,20 @@ class ClienteController extends Controller
             $path = "fotos/$filename";
         }
 
-        return Cliente::create([
+        $cliente = Cliente::create([
+            'user_id' => $request->user()->id,
             'nome' => $request->nome,
             'idade' => $request->idade,
             'documento' => $request->documento,
             'foto' => $path,
         ]);
+
+        return response()->json($cliente, 201);
     }
 
     public function update(Request $request, string $id)
     {
-        $cliente = Cliente::find($id);
+        $cliente = Cliente::where('user_id', $request->user()->id)->find($id);
 
         if (!$cliente) {
             return response()->json(['message' => 'Cliente não encontrado'], 404);
@@ -89,12 +92,14 @@ class ClienteController extends Controller
         return response()->json($cliente);
     }
 
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
-        $cliente = Cliente::find($id);
+        $cliente = Cliente::where('user_id', $request->user()->id)->find($id);
+
         if (!$cliente) {
             return response()->json(['message' => 'Cliente não encontrado'], 404);
         }
+
         $cliente->delete();
         return response()->json(['message' => 'Cliente excluído com sucesso']);
     }
