@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Cliente;
-use Illuminate\Support\Facades\Storage;
 
 class ClienteController extends Controller
 {
@@ -42,14 +41,6 @@ class ClienteController extends Controller
             'foto' => 'nullable|string',
         ]);
 
-        $path = null;
-        if ($request->foto) {
-            $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->foto));
-            $filename = uniqid() . '.png';
-            Storage::disk('public')->put("fotos/$filename", $image);
-            $path = "fotos/$filename";
-        }
-
         $cliente = Cliente::create([
             'user_id' => $request->user()->id,
             'nome' => $request->nome,
@@ -57,7 +48,7 @@ class ClienteController extends Controller
             'documento' => $request->documento,
             'endereco' => $request->endereco,
             'telefone' => $request->telefone,
-            'foto' => $path,
+            'foto' => $request->foto ?: null,
         ]);
 
         return response()->json($cliente, 201);
@@ -80,21 +71,13 @@ class ClienteController extends Controller
             'foto' => 'nullable|string',
         ]);
 
-        $path = $cliente->foto;
-        if ($request->foto) {
-            $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->foto));
-            $filename = uniqid() . '.png';
-            Storage::disk('public')->put("fotos/$filename", $image);
-            $path = "fotos/$filename";
-        }
-
         $cliente->update([
             'nome' => $request->nome,
             'idade' => $request->idade,
             'documento' => $request->documento,
             'endereco' => $request->endereco,
             'telefone' => $request->telefone,
-            'foto' => $path,
+            'foto' => $request->foto ?: $cliente->foto,
         ]);
 
         return response()->json($cliente);
