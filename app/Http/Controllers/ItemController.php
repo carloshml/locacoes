@@ -34,6 +34,7 @@ class ItemController extends Controller
             'name'      => 'required|string|max:255',
             'valor'     => 'nullable|numeric|min:0',
             'descricao' => 'nullable|string|max:500',
+            'foto'      => 'nullable|string',
         ]);
 
         $item = Item::create([
@@ -41,6 +42,7 @@ class ItemController extends Controller
             'name'      => $request->name,
             'valor'     => $request->valor ?? 0,
             'descricao' => $request->descricao,
+            'foto'      => $request->foto ?: null,
         ]);
 
         return response()->json($item, 201);
@@ -58,12 +60,14 @@ class ItemController extends Controller
             'name'      => 'required|string|max:255',
             'valor'     => 'nullable|numeric|min:0',
             'descricao' => 'nullable|string|max:500',
+            'foto'      => 'nullable|string',
         ]);
 
         $item->update([
             'name'      => $request->name,
             'valor'     => $request->valor ?? $item->valor,
             'descricao' => $request->descricao,
+            'foto'      => $request->foto ?: $item->foto,
         ]);
 
         return response()->json($item);
