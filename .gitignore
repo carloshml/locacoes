@@ -23,3 +23,5 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 bd-moke.sql
+/banco_laravel
+/phpCRUD
