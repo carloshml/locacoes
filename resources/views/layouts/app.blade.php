@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <title>@yield('title', 'Locações')</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="alternate icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="user-id" content="{{ auth()->check() ? auth()->id() : '' }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
