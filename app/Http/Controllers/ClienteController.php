@@ -34,7 +34,7 @@ class ClienteController extends Controller
     {
         $request->validate([
             'nome' => 'required|string|max:255',
-            'idade' => 'required|integer',
+            'idade' => 'required|integer|min:0|max:150',
             'documento' => 'required|string|unique:clientes',
             'endereco' => 'nullable|string|max:500',
             'telefone' => 'nullable|string|max:20',
@@ -64,7 +64,7 @@ class ClienteController extends Controller
 
         $request->validate([
             'nome' => 'required|string|max:255',
-            'idade' => 'required|integer',
+            'idade' => 'required|integer|min:0|max:150',
             'documento' => "required|string|unique:clientes,documento,$id",
             'endereco' => 'nullable|string|max:500',
             'telefone' => 'nullable|string|max:20',

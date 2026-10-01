@@ -15,7 +15,17 @@
 
       <div>
         <label class="block text-gray-700 font-medium mb-1">Idade</label>
-        <input v-model="cliente.idade" type="number" class="w-full border rounded-lg p-2 focus:ring focus:ring-blue-300 focus:border-blue-400">
+        <input
+          v-model="cliente.idade"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          max="150"
+          step="1"
+          @keydown="bloquearNaoNumerico"
+          @input="sanitizarIdade"
+          @paste="onPasteIdade"
+          class="w-full border rounded-lg p-2 focus:ring focus:ring-blue-300 focus:border-blue-400">
         <p v-if="erros.idade" class="text-red-600 text-sm mt-1">{{ erros.idade[0] }}</p>
       </div>
 
@@ -87,6 +97,25 @@ export default {
     }
   },
   methods: {
+    // Bloqueia os caracteres que o input type=number aceita mas nao sao digitos
+    // (e, E, +, -, .) e permite teclas de controle (backspace, setas, tab...)
+    bloquearNaoNumerico(e) {
+      const teclasPermitidas = ['Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+      if (teclasPermitidas.includes(e.key) || e.ctrlKey || e.metaKey) return;
+      if (!/^[0-9]$/.test(e.key)) {
+        e.preventDefault();
+      }
+    },
+    // Remove qualquer caractere nao numerico que escape (ex.: colagem via mouse)
+    sanitizarIdade(e) {
+      const apenasDigitos = String(e.target.value).replace(/\D/g, '');
+      this.cliente.idade = apenasDigitos;
+    },
+    onPasteIdade(e) {
+      e.preventDefault();
+      const texto = (e.clipboardData || window.clipboardData).getData('text');
+      this.cliente.idade = String(texto).replace(/\D/g, '');
+    },
     onFotoChange(e) {
       const file = e.target.files[0];
       if (!file) return;
