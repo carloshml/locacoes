@@ -21,70 +21,52 @@ class LoginController extends Controller
             'password' => ['required'],
         ]);
 
-        // Verificar se o usuário existe e está ativo
+        // Mensagem generica unica para evitar enumeracao de usuarios:
+        // nao revelamos se o e-mail existe ou se a senha esta errada.
+        $erroCredenciais = 'As credenciais informadas não correspondem aos nossos registros.';
+
         $user = \App\Models\User::where('email', $request->email)->first();
-        
-        if (!$user) {
+
+        // Verifica as credenciais ANTES de revelar qualquer informacao sobre a conta.
+        // Se usuario nao existe OU senha incorreta -> mesma mensagem generica.
+        if (!$user || !Auth::attempt($credentials, $request->remember)) {
             if ($request->wantsJson()) {
-                return response()->json([
-                    'message' => 'Usuário não encontrado.'
-                ], 401);
+                return response()->json(['message' => $erroCredenciais], 401);
             }
-            return back()->withErrors([
-                'email' => 'Usuário não encontrado.',
-            ])->onlyInput('email');
+            return back()->withErrors(['email' => $erroCredenciais])->onlyInput('email');
         }
 
-        // Verificar se o usuário está ativo
+        // Credenciais validas. Agora sim podemos checar se a conta esta ativa.
         if (!$user->is_active) {
+            Auth::logout();
+            $mensagemInativo = 'Sua conta está inativa. Entre em contato com o administrador.';
             if ($request->wantsJson()) {
-                return response()->json([
-                    'message' => 'Sua conta está inativa. Entre em contato com o administrador.'
-                ], 403);
+                return response()->json(['message' => $mensagemInativo], 403);
             }
-            return back()->withErrors([
-                'email' => 'Sua conta está inativa. Entre em contato com o administrador.',
-            ])->onlyInput('email');
+            return back()->withErrors(['email' => $mensagemInativo])->onlyInput('email');
         }
 
-        // Tentar fazer login
-        if (Auth::attempt($credentials, $request->remember)) {
-            $request->session()->regenerate();
-            
-            // Gerar token Sanctum para API
-            $user = Auth::user();
-            
-            // Atualizar last_login_at
-            $user->update([
-                'last_login_at' => now()
-            ]);
-            
-            $token = $user->createToken('auth-token')->plainTextToken;
-            
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'redirect' => '/dashboard',
-                    'token' => $token,
-                    'user' => $user
-                ]);
-            }
-            
-            // Para web, armazenar token na sessão
-            session(['api_token' => $token]);
-            
-            return redirect()->intended('/dashboard');
-        }
+        // Login confirmado
+        $request->session()->regenerate();
+
+        $user = Auth::user();
+        $user->update(['last_login_at' => now()]);
+
+        $token = $user->createToken('auth-token')->plainTextToken;
 
         if ($request->wantsJson()) {
             return response()->json([
-                'message' => 'As credenciais informadas não correspondem aos nossos registros.'
-            ], 401);
+                'success' => true,
+                'redirect' => '/dashboard',
+                'token' => $token,
+                'user' => $user
+            ]);
         }
 
-        return back()->withErrors([
-            'email' => 'As credenciais informadas não correspondem aos nossos registros.',
-        ])->onlyInput('email');
+        // Para web, armazenar token na sessão
+        session(['api_token' => $token]);
+
+        return redirect()->intended('/dashboard');
     }
 
     public function logout(Request $request)
