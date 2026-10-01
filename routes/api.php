@@ -28,14 +28,20 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Rotas de Usuários
     Route::prefix('usuarios')->group(function () {
-        Route::get('/', [UserController::class, 'list']);
-        Route::get('/{id}', [UserController::class, 'getById']);
-        Route::post('/', [UserController::class, 'store']);
-        Route::put('/{id}', [UserController::class, 'update']);
-        Route::delete('/{id}', [UserController::class, 'destroy']);
+        // Operacoes do proprio usuario (dono) ou admin — a checagem de dono
+        // e feita no controller (ver updateProfile/updateAvatar/getActivities)
         Route::post('/{id}/avatar', [UserController::class, 'updateAvatar']);
         Route::put('/{id}/profile', [UserController::class, 'updateProfile']);
         Route::get('/{id}/activities', [UserController::class, 'getActivities']);
+
+        // Gestao de usuarios — restrita a admin/manager
+        Route::middleware('admin')->group(function () {
+            Route::get('/', [UserController::class, 'list']);
+            Route::get('/{id}', [UserController::class, 'getById']);
+            Route::post('/', [UserController::class, 'store']);
+            Route::put('/{id}', [UserController::class, 'update']);
+            Route::delete('/{id}', [UserController::class, 'destroy']);
+        });
     });
     
     // Rotas de Itens
@@ -58,6 +64,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}', [LocacaoItemController::class, 'destroy']);
     });
 
-    // Rotas de Atividades
-    Route::get('/activities', [UserController::class, 'getAllActivities']);
+    // Rotas de Atividades (log global) — restrita a admin/manager
+    Route::middleware('admin')->get('/activities', [UserController::class, 'getAllActivities']);
 });
