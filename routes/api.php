@@ -6,6 +6,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\LocacaoItemController;
+use App\Http\Controllers\FileController;
 
 // Rotas protegidas pelo Sanctum
 Route::middleware('auth:sanctum')->group(function () {
@@ -66,4 +67,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Rotas de Atividades (log global) — restrita a admin/manager
     Route::middleware('admin')->get('/activities', [UserController::class, 'getAllActivities']);
+
+    // Gerenciador de arquivos — restrito a admin/manager
+    Route::middleware('admin')->prefix('arquivos')->group(function () {
+        Route::get('/', [FileController::class, 'index']);
+        Route::post('/', [FileController::class, 'store']);
+        Route::get('/{id}/download', [FileController::class, 'download']);
+        Route::delete('/{id}', [FileController::class, 'destroy']);
+    });
 });

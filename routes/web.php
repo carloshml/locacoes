@@ -81,6 +81,12 @@ Route::middleware('auth')->group(function () {
 
     // Faturamento
     Route::view('/faturamento', 'faturamento')->name('faturamento');
+
+    // Gerenciador de Arquivos (apenas admin/manager)
+    Route::get('/arquivos', function () {
+        abort_unless(auth()->user()->isManager(), 403);
+        return view('arquivos');
+    })->name('arquivos');
     
     Route::get('/', function () {
         return redirect()->route('dashboard');

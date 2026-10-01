@@ -120,6 +120,31 @@
                             </div>
                         </a>
 
+                        <!-- Arquivos Card (admin/manager) -->
+                        <a href="{{ route('arquivos') }}" class="group">
+                            <div
+                                class="bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-pink-500 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                                <div
+                                    class="bg-gradient-to-r from-pink-500 to-pink-600 rounded-lg w-16 h-16 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">Arquivos</h3>
+                                <p class="text-gray-600">Envie, baixe e remova arquivos do servidor</p>
+                                <div
+                                    class="mt-4 text-pink-600 font-semibold flex items-center gap-2 group-hover:gap-3 transition-all">
+                                    Acessar
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                                        </path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </a>
+
                     </div>
                 @endif
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
