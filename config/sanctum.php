@@ -50,7 +50,9 @@ return [
     |
     */
 
-    'expiration' => null,
+    // Tokens expiram apos o numero de minutos definido (padrao: 1 dia = 1440 min).
+    // Reduz a janela de uso de um token vazado.
+    'expiration' => env('SANCTUM_TOKEN_EXPIRATION', 1440),
 
     /*
     |--------------------------------------------------------------------------
