@@ -11,7 +11,7 @@ Guia de deploy da aplicação Laravel na hospedagem compartilhada da HostGator.
 - **PHP:** 8.3 (`/usr/local/bin/php`)
 - **Composer:** NÃO instalado globalmente — usamos `composer.phar` local no projeto
 - **Node/npm:** NÃO existem no servidor — o build do front-end é feito **localmente** e enviado por SCP
-- **Banco:** MySQL (`SEU_USUARIO_locacoes`), criado pelo cPanel → MySQL Databases
+- **Banco:** MySQL (criado pelo cPanel → MySQL Databases; nome/usuario/senha ficam so no `.env` do servidor)
 - **Projeto:** `~/repositories/locacoes` (vem do Git Version Control do cPanel)
 
 ## Como a aplicação é servida
@@ -77,10 +77,13 @@ APP_URL=https://SEU_DOMINIO
 DB_CONNECTION=mysql
 DB_HOST=localhost
 DB_PORT=3306
-DB_DATABASE=SEU_USUARIO_locacoes
-DB_USERNAME=SEU_USUARIO_laravel
-DB_PASSWORD=********
+DB_DATABASE=SEU_PREFIXO_banco
+DB_USERNAME=SEU_PREFIXO_usuario
+DB_PASSWORD=SUA_SENHA_FORTE
 ```
+
+> NUNCA versione valores reais de `.env`. O `.env` ja esta no `.gitignore`.
+> Os exemplos acima sao apenas placeholders.
 
 ## Apontar o domínio (uma vez)
 
