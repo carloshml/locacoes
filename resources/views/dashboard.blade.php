@@ -273,14 +273,20 @@
             })
                 .then(res => res.json())
                 .then(data => {
-                    document.getElementById('totalClientes').textContent = data.length;
+                    // Garante que data seja um array (a API pode retornar {data: [...]})
+                    const clientes = Array.isArray(data) ? data : (data.data ?? []);
 
-                    const somaIdade = data.reduce((sum, pessoa) => sum + pessoa.idade, 0);
-                    const media = data.length > 0 ? Math.round(somaIdade / data.length) : 0;
-                    document.getElementById('mediaIdade').textContent = media;
+                    const totalPessoas = document.getElementById('totalPessoas');
+                    if (totalPessoas) {
+                        totalPessoas.textContent = clientes.length;
+                    }
 
-                    const docsUnicos = new Set(data.map(p => p.documento)).size;
-                    document.getElementById('totalDocumentos').textContent = docsUnicos;
+                    const mediaIdadeEl = document.getElementById('mediaIdade');
+                    if (mediaIdadeEl) {
+                        const somaIdade = clientes.reduce((sum, pessoa) => sum + (pessoa.idade || 0), 0);
+                        const media = clientes.length > 0 ? Math.round(somaIdade / clientes.length) : 0;
+                        mediaIdadeEl.textContent = media;
+                    }
                 })
                 .catch(err => console.error(err));
         </script>
