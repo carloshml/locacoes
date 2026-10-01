@@ -120,8 +120,13 @@ class UserController extends Controller
 
     public function updateProfile(Request $request, $id)
     {
+        // Apenas o proprio usuario ou um admin/manager pode alterar o perfil.
+        if ((int) $id !== $request->user()->id && !$request->user()->isManager()) {
+            return response()->json(['message' => 'Acesso negado.'], 403);
+        }
+
         $user = User::find($id);
-        
+
         if (!$user) {
             return response()->json(['message' => 'Usuário não encontrado'], 404);
         }
@@ -150,21 +155,41 @@ class UserController extends Controller
 
     public function updateAvatar(Request $request, $id)
     {
+        // Apenas o proprio usuario ou um admin/manager pode alterar o avatar.
+        if ((int) $id !== $request->user()->id && !$request->user()->isManager()) {
+            return response()->json(['message' => 'Acesso negado.'], 403);
+        }
+
         $request->validate([
             'avatar' => 'required|string' // base64
         ]);
 
         $user = User::find($id);
-        
+
         if (!$user) {
             return response()->json(['message' => 'Usuário não encontrado'], 404);
+        }
+
+        // Valida que o conteudo base64 e realmente uma imagem suportada.
+        if (!preg_match('#^data:image/(jpeg|jpg|png|gif|webp);base64,#i', $request->avatar)) {
+            return response()->json(['message' => 'Formato de imagem inválido.'], 422);
+        }
+
+        $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->avatar), true);
+
+        if ($image === false) {
+            return response()->json(['message' => 'Imagem inválida.'], 422);
+        }
+
+        // Limite de ~2MB para o conteudo decodificado.
+        if (strlen($image) > 2 * 1024 * 1024) {
+            return response()->json(['message' => 'Imagem muito grande (máx. 2MB).'], 422);
         }
 
         if ($user->avatar) {
             Storage::disk('public')->delete($user->avatar);
         }
 
-        $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->avatar));
         $filename = 'avatars/' . uniqid() . '.png';
         Storage::disk('public')->put($filename, $image);
 
@@ -173,13 +198,18 @@ class UserController extends Controller
         return response()->json(['avatar' => $filename]);
     }
 
-    public function getActivities($id)
+    public function getActivities(Request $request, $id)
     {
+        // Apenas o proprio usuario ou um admin/manager pode ver as atividades.
+        if ((int) $id !== $request->user()->id && !$request->user()->isManager()) {
+            return response()->json(['message' => 'Acesso negado.'], 403);
+        }
+
         $logs = ActivityLog::where('user_id', $id)
             ->orderBy('created_at', 'desc')
             ->limit(50)
             ->get();
-        
+
         return response()->json($logs);
     }
 
