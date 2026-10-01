@@ -70,10 +70,15 @@ export default {
     this.carregar();
   },
   methods: {
+    csrfToken() {
+      return document.querySelector('meta[name="csrf-token"]')?.content;
+    },
     authHeaders() {
       const token = localStorage.getItem('api_token');
       const headers = { 'Accept': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
+      const csrf = this.csrfToken();
+      if (csrf) headers['X-CSRF-TOKEN'] = csrf;
       return headers;
     },
     carregar() {
@@ -109,6 +114,8 @@ export default {
       const token = localStorage.getItem('api_token');
       if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
       xhr.setRequestHeader('Accept', 'application/json');
+      const csrf = this.csrfToken();
+      if (csrf) xhr.setRequestHeader('X-CSRF-TOKEN', csrf);
 
       xhr.upload.onprogress = (ev) => {
         if (ev.lengthComputable) {
