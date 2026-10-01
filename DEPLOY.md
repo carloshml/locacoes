@@ -136,19 +136,29 @@ php artisan view:cache
 
 ### Mudanças no FRONT-END (CSS / JS / Vue)
 
-Local — buildar e enviar os assets:
+> IMPORTANTE: os 2 primeiros comandos rodam na SUA MAQUINA (PowerShell local);
+> os `chmod` rodam no SERVIDOR (sessao SSH). O `chmod` e OBRIGATORIO: todo
+> arquivo novo enviado por SCP entra com permissao restrita e o Apache nao
+> consegue servi-lo (resulta em 403 no .js/.css novo).
+
+**1) Na sua maquina — buildar e enviar:**
 ```bash
 npm run build
 scp -P 2222 -i C:\Users\<voce>\.ssh\id_rsa -r public\build SEU_USUARIO@SEU_HOST.hostgator.com.br:~/repositories/locacoes/public/
 ```
 
-Servidor — reaplicar permissões dos novos assets:
+**2) No servidor (SSH) — liberar permissao dos novos assets:**
 ```bash
-chmod 755 ~/repositories/locacoes/public/build ~/repositories/locacoes/public/build/assets
-chmod 644 ~/repositories/locacoes/public/build/assets/* ~/repositories/locacoes/public/build/manifest.json
+cd ~/repositories/locacoes
+chmod 755 public/build public/build/assets
+chmod 644 public/build/assets/* public/build/manifest.json
 ```
 
-Depois, no navegador, recarregar com `Ctrl+Shift+R` (ignora cache).
+**3) No navegador:** recarregar com `Ctrl+Shift+R` (ignora cache).
+
+> O nome do arquivo JS muda a cada build (ex.: app-XXXX.js). Por isso sempre
+> envie a pasta `build` inteira — o `manifest.json` referencia o nome correto.
+> Se tambem mudou PHP/Blade, faca o fluxo de BACK-END (git pull + caches).
 
 ## Pendências de segurança
 
