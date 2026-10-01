@@ -149,10 +149,12 @@ scp -P 2222 -i C:\Users\<voce>\.ssh\id_rsa -r public\build SEU_USUARIO@SEU_HOST.
 
 **2) No servidor (SSH) — liberar permissao dos novos assets:**
 ```bash
-cd ~/repositories/locacoes
-chmod 755 public/build public/build/assets
-chmod 644 public/build/assets/* public/build/manifest.json
+cd ~/repositories/locacoes && \
+  find public/build -type d -exec chmod 755 {} \; && \
+  find public/build -type f -exec chmod 644 {} \;
 ```
+Este comando aplica a permissao correta recursivamente (755 nas pastas,
+644 nos arquivos), independente de quantos/quais arquivos foram enviados.
 
 **3) No navegador:** recarregar com `Ctrl+Shift+R` (ignora cache).
 
