@@ -7,9 +7,12 @@ use App\Http\Controllers\Auth\RegisterController;
 // ========== ROTAS PÚBLICAS (sem login) ==========
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [LoginController::class, 'login']);
+    // throttle: no maximo 5 tentativas por minuto por IP (anti brute-force / bots)
+    Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1');
+
     Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
-    Route::post('/register', [RegisterController::class, 'register']);
+    // throttle: no maximo 5 cadastros por minuto por IP (anti-spam / bots)
+    Route::post('/register', [RegisterController::class, 'register'])->middleware('throttle:5,1');
 });
 
 // ========== ROTAS PROTEGIDAS (precisa estar logado) ==========
