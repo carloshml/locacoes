@@ -98,6 +98,16 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                   </svg>
                 </button>
+                <button v-if="user.id != currentUserId" @click="toggleStatus(user)"
+                  :class="user.is_active ? 'text-gray-500 hover:text-gray-700' : 'text-green-600 hover:text-green-800'"
+                  :title="user.is_active ? 'Desativar' : 'Ativar'">
+                  <svg v-if="user.is_active" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                  </svg>
+                  <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </button>
                 <button @click="deleteUser(user.id)" v-if="user.id !== currentUserId" class="text-red-600 hover:text-red-800" title="Excluir">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -210,7 +220,30 @@ export default {
           });
       }
     },
-    
+
+    toggleStatus(user) {
+      const acao = user.is_active ? 'desativar' : 'ativar';
+      if (!confirm(`Deseja ${acao} o usuário "${user.name}"?`)) return;
+
+      const token = localStorage.getItem('api_token');
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+      const headers = { 'Accept': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken;
+
+      fetch(`/api/usuarios/${user.id}/status`, { method: 'PATCH', headers })
+        .then(async res => {
+          const data = await res.json();
+          if (!res.ok) { this.$refs.toast.show(data.message || 'Erro ao alterar status', 'error'); return; }
+          this.fetchUsers();
+          this.$refs.toast.show(data.message);
+        })
+        .catch(err => {
+          console.error(err);
+          this.$refs.toast.show('Erro ao alterar status do usuário', 'error');
+        });
+    },
+
     formatDate(date) {
       if (!date) return 'Nunca';
       return new Date(date).toLocaleDateString('pt-BR');

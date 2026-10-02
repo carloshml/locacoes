@@ -118,6 +118,34 @@ class UserController extends Controller
         return response()->json(['message' => 'Usuário excluído com sucesso']);
     }
 
+    /**
+     * Ativa ou desativa um usuario (apenas admin/manager — garantido pela rota).
+     * Endpoint dedicado para o botao rapido na lista, sem exigir os demais campos.
+     */
+    public function toggleStatus(Request $request, $id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'Usuário não encontrado'], 404);
+        }
+
+        if ($user->id === auth()->id()) {
+            return response()->json(['message' => 'Não é possível alterar o status do seu próprio usuário'], 403);
+        }
+
+        $user->is_active = !$user->is_active;
+        $user->save();
+
+        $acao = $user->is_active ? 'Ativou' : 'Desativou';
+        $this->logActivity(auth()->id(), 'update', 'User', $user->id, "{$acao} um usuário");
+
+        return response()->json([
+            'message' => $user->is_active ? 'Usuário ativado com sucesso' : 'Usuário desativado com sucesso',
+            'is_active' => $user->is_active,
+        ]);
+    }
+
     public function updateProfile(Request $request, $id)
     {
         // Apenas o proprio usuario ou um admin/manager pode alterar o perfil.

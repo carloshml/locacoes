@@ -31,16 +31,19 @@ class RegisterController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        // Verificar se é o primeiro usuário do sistema
+        // O primeiro usuario do sistema vira admin ativo (senao ninguem
+        // conseguiria administrar). Os demais sao criados INATIVOS e precisam
+        // ser ativados por um administrador antes de acessar o sistema.
         $isFirstUser = User::count() === 0;
         $role = $isFirstUser ? 'admin' : 'user';
+        $isActive = $isFirstUser;
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $role,
-            'is_active' => true, // Usuário ativo por padrão
+            'is_active' => $isActive,
         ]);
 
         // Criar perfil
@@ -49,12 +52,22 @@ class RegisterController extends Controller
             'preferences' => ['theme' => 'light', 'notifications' => true]
         ]);
 
+        // Usuario inativo: NAO faz login, apenas informa que aguarda ativacao.
+        if (!$isActive) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'pending_activation' => true,
+                    'message' => 'Cadastro realizado! Sua conta aguarda ativação por um administrador.',
+                ], 201);
+            }
+            return redirect('/login')->with('status', 'Cadastro realizado! Aguarde a ativação por um administrador.');
+        }
+
+        // Primeiro usuario (admin ativo): login automatico normal.
         Auth::login($user);
-        
-        // Atualizar last_login_at
         $user->update(['last_login_at' => now()]);
-        
-        // Gerar token Sanctum para API
+
         $token = $user->createToken('auth-token')->plainTextToken;
         session(['api_token' => $token]);
 
