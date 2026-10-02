@@ -1,4 +1,6 @@
 <template>
+  <toast-message ref="toast"></toast-message>
+
   <div class="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4 rounded-xl">
     <div class="flex justify-between items-center text-white">
       {{ id > 0 ? 'Editar Cliente' : 'Cadastrar Cliente' }}
@@ -76,7 +78,10 @@
 </template>
 
 <script>
+import ToastMessage from './ToastMessage.vue';
+
 export default {
+  components: { ToastMessage },
   props: { id: { type: Number, default: 0 } },
   data() {
     return { cliente: { nome: '', idade: '', documento: '', endereco: '', telefone: '', foto: '' }, fotoPreview: null, erros: {} }
@@ -119,6 +124,16 @@ export default {
     onFotoChange(e) {
       const file = e.target.files[0];
       if (!file) return;
+
+      // Limite de 1 MB para a imagem (em base64 vira ~1.33 MB no envio,
+      // seguro dentro do post_max_size do servidor).
+      const MAX_BYTES = 1 * 1024 * 1024;
+      if (file.size > MAX_BYTES) {
+        this.$refs.toast.show('A imagem deve ter no máximo 1 MB.', 'error', 2500);
+        e.target.value = '';
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (ev) => {
         this.fotoPreview = ev.target.result;
@@ -140,8 +155,9 @@ export default {
           if (res.status === 401) { localStorage.removeItem('api_token'); window.location.href = '/login'; return; }
           if (!res.ok) { const d = await res.json(); this.erros = d.errors || {}; return; }
           this.erros = {};
-          alert(this.id > 0 ? 'Cliente atualizado!' : 'Cliente cadastrado!');
-          window.location.href = '/clientes';
+          this.$refs.toast.show(this.id > 0 ? 'Cliente atualizado!' : 'Cliente cadastrado!');
+          // aguarda a mensagem aparecer antes de redirecionar
+          setTimeout(() => { window.location.href = '/clientes'; }, 1500);
         });
     }
   }

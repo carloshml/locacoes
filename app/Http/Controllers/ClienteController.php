@@ -38,7 +38,10 @@ class ClienteController extends Controller
             'documento' => 'required|string|unique:clientes',
             'endereco' => 'nullable|string|max:500',
             'telefone' => 'nullable|string|max:20',
-            'foto' => 'nullable|string',
+            // base64 de uma imagem de ~1MB tem ~1.4M caracteres; teto com folga
+            'foto' => 'nullable|string|max:1500000',
+        ], [
+            'foto.max' => 'A imagem é muito grande. Use uma imagem de até 1 MB.',
         ]);
 
         $cliente = Cliente::create([
@@ -68,7 +71,10 @@ class ClienteController extends Controller
             'documento' => "required|string|unique:clientes,documento,$id",
             'endereco' => 'nullable|string|max:500',
             'telefone' => 'nullable|string|max:20',
-            'foto' => 'nullable|string',
+            // base64 de uma imagem de ~1MB tem ~1.4M caracteres; teto com folga
+            'foto' => 'nullable|string|max:1500000',
+        ], [
+            'foto.max' => 'A imagem é muito grande. Use uma imagem de até 1 MB.',
         ]);
 
         $cliente->update([
