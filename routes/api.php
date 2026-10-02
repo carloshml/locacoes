@@ -7,9 +7,18 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\LocacaoItemController;
 use App\Http\Controllers\FileController;
+use App\Http\Controllers\AuthApiController;
+
+// ===== Autenticacao mobile (stateless, sem sessao/CSRF) =====
+// Login publico com rate limiting (anti brute-force / bots).
+Route::post('/login', [AuthApiController::class, 'login'])->middleware('throttle:5,1');
 
 // Rotas protegidas pelo Sanctum
 Route::middleware('auth:sanctum')->group(function () {
+    // Autenticacao mobile (precisa de token)
+    Route::get('/me', [AuthApiController::class, 'me']);
+    Route::post('/logout', [AuthApiController::class, 'logout']);
+
     // Rotas de Clientes
     Route::prefix('clientes')->group(function () {
         Route::get('/', [ClienteController::class, 'list']);
