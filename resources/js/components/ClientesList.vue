@@ -1,5 +1,6 @@
 <template>
   <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+    <toast-message ref="toast"></toast-message>
     <div class="p-4 bg-gray-50 border-b">
       <div class="flex flex-col sm:flex-row gap-4 justify-between items-center">
         <div class="relative">
@@ -99,7 +100,10 @@
 </template>
 
 <script>
+import ToastMessage from './ToastMessage.vue';
+
 export default {
+  components: { ToastMessage },
   data() {
     return { clientes: [], loading: true, error: null, search: '', sortKey: 'nome', sortOrder: 'asc', currentPage: 1, itemsPerPage: 10 }
   },
@@ -147,7 +151,7 @@ export default {
       if (token) headers['Authorization'] = `Bearer ${token}`;
       if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken;
       fetch(`/api/clientes/${id}`, { method: 'DELETE', headers })
-        .then(res => { if (res.ok) { this.fetchClientes(); alert('Cliente excluído!'); } });
+        .then(res => { if (res.ok) { this.fetchClientes(); this.$refs.toast.show('Cliente excluído!'); } });
     }
   }
 }

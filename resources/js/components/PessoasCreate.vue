@@ -1,5 +1,6 @@
 <template>
 
+  <toast-message ref="toast"></toast-message>
 
   <div class="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4 rounded-xl">
     <div class="flex justify-between items-center text-white">
@@ -41,7 +42,10 @@
 </template>
 
 <script>
+import ToastMessage from './ToastMessage.vue';
+
 export default {
+  components: { ToastMessage },
   props: {
     id: {
       type: Number,
@@ -114,8 +118,8 @@ export default {
         })
         .then(() => {
           this.erros = {};
-          alert(this.id > 0 ? 'Pessoa atualizada com sucesso!' : 'Pessoa cadastrada com sucesso!');
-          window.location.href = `/pessoas/`
+          this.$refs.toast.show(this.id > 0 ? 'Pessoa atualizada com sucesso!' : 'Pessoa cadastrada com sucesso!');
+          setTimeout(() => { window.location.href = `/pessoas/`; }, 1500);
         })
         .catch(err => console.error(err));
     }

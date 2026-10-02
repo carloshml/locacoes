@@ -1,4 +1,6 @@
 <template>
+  <toast-message ref="toast"></toast-message>
+
   <div class="bg-gradient-to-r from-amber-600 to-amber-700 px-6 py-4 rounded-xl">
     <div class="text-white font-bold text-lg">{{ id > 0 ? 'Editar Locação' : 'Nova Locação' }}</div>
   </div>
@@ -92,9 +94,10 @@
 <script>
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
+import ToastMessage from './ToastMessage.vue';
 
 export default {
-  components: { VueDatePicker },
+  components: { VueDatePicker, ToastMessage },
   props: { id: { type: Number, default: 0 } },
   computed: {
     clienteSelecionado() {
@@ -175,8 +178,8 @@ export default {
         .then(async res => {
           if (!res.ok) { const d = await res.json(); this.erros = d.errors || {}; return; }
           this.erros = {};
-          alert(this.id > 0 ? 'Locação atualizada!' : 'Locação criada!');
-          window.location.href = '/locacoes';
+          this.$refs.toast.show(this.id > 0 ? 'Locação atualizada!' : 'Locação criada!');
+          setTimeout(() => { window.location.href = '/locacoes'; }, 1500);
         });
     }
   }

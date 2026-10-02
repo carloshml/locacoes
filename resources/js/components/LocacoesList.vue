@@ -1,5 +1,6 @@
 <template>
   <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+    <toast-message ref="toast"></toast-message>
     <!-- Filtros Avançados -->
     <div class="p-4 bg-gray-50 border-b space-y-4">
 
@@ -203,9 +204,10 @@
 <script>
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
+import ToastMessage from './ToastMessage.vue';
 
 export default {
-  components: { VueDatePicker },
+  components: { VueDatePicker, ToastMessage },
   data() {
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -414,9 +416,9 @@ export default {
         .then(res => {
           if (res.ok) {
             this.fetchLocacoes();
-            alert('Locação finalizada!');
+            this.$refs.toast.show('Locação finalizada!');
           } else {
-            alert('Erro ao finalizar locação');
+            this.$refs.toast.show('Erro ao finalizar locação', 'error');
           }
         })
         .catch(err => console.error('Erro:', err));
@@ -431,7 +433,7 @@ export default {
         .then(res => {
           if (res.ok) {
             this.fetchLocacoes();
-            alert('Locação excluída!');
+            this.$refs.toast.show('Locação excluída!');
           }
         })
         .catch(err => console.error('Erro:', err));

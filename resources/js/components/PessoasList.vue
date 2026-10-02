@@ -1,5 +1,6 @@
 <template>
   <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+    <toast-message ref="toast"></toast-message>
     <!-- Filtros e Busca -->
     <div class="p-4 bg-gray-50 border-b">
       <div class="flex flex-col sm:flex-row gap-4 justify-between items-center">
@@ -203,7 +204,10 @@
 </template>
 
 <script>
+import ToastMessage from './ToastMessage.vue';
+
 export default {
+  components: { ToastMessage },
   data() {
     return {
       pessoas: [],
@@ -398,14 +402,14 @@ export default {
             }
             if (res.ok) {
               this.fetchPessoas();
-              alert('Pessoa excluída com sucesso!');
+              this.$refs.toast.show('Pessoa excluída com sucesso!');
             } else {
               throw new Error('Erro ao excluir');
             }
           })
           .catch(err => {
             console.error('Error deleting pessoa:', err);
-            alert('Erro ao excluir pessoa. Tente novamente.');
+            this.$refs.toast.show('Erro ao excluir pessoa. Tente novamente.', 'error');
           });
       }
     }

@@ -1,5 +1,6 @@
 <template>
   <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+    <toast-message ref="toast"></toast-message>
     <!-- Header -->
     <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
       <div class="flex justify-between items-center text-white">
@@ -112,7 +113,10 @@
 </template>
 
 <script>
+import ToastMessage from './ToastMessage.vue';
+
 export default {
+  components: { ToastMessage },
   data() {
     return {
       users: [],
@@ -198,11 +202,11 @@ export default {
           .then(res => res.json())
           .then(() => {
             this.fetchUsers();
-            alert('Usuário excluído com sucesso!');
+            this.$refs.toast.show('Usuário excluído com sucesso!');
           })
           .catch(err => {
             console.error(err);
-            alert('Erro ao excluir usuário');
+            this.$refs.toast.show('Erro ao excluir usuário', 'error');
           });
       }
     },

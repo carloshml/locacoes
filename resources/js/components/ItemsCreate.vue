@@ -1,4 +1,6 @@
 <template>
+  <toast-message ref="toast"></toast-message>
+
   <div class="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 rounded-xl">
     <div class="text-white font-bold text-lg">{{ id > 0 ? 'Editar Item' : 'Cadastrar Item' }}</div>
   </div>
@@ -52,7 +54,10 @@
 </template>
 
 <script>
+import ToastMessage from './ToastMessage.vue';
+
 export default {
+  components: { ToastMessage },
   props: { id: { type: Number, default: 0 } },
   data() {
     return { item: { name: '', valor: '', descricao: '', foto: '' }, fotoPreview: null, erros: {} }
@@ -107,8 +112,8 @@ export default {
             return;
           }
           this.erros = {};
-          alert(this.id > 0 ? 'Item atualizado!' : 'Item cadastrado!');
-          window.location.href = '/itens';
+          this.$refs.toast.show(this.id > 0 ? 'Item atualizado!' : 'Item cadastrado!');
+          setTimeout(() => { window.location.href = '/itens'; }, 1500);
         })
         .catch(err => console.error('Erro de rede:', err));
     }

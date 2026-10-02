@@ -1,6 +1,7 @@
 <!-- resources/js/components/UsersCreateUpdate.vue -->
 <template>
   <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+    <toast-message ref="toast"></toast-message>
     <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
       <h2 class="text-2xl font-bold text-white">
         {{ id > 0 ? 'Editar Usuário' : 'Cadastrar Usuário' }}
@@ -106,7 +107,10 @@
 </template>
 
 <script>
+import ToastMessage from './ToastMessage.vue';
+
 export default {
+  components: { ToastMessage },
   props: {
     id: { type: Number, default: 0 }
   },
@@ -265,8 +269,8 @@ export default {
           if (this.id > 0 && this.avatarFile) {
             await this.uploadAvatar();
           }
-          alert(this.id > 0 ? 'Usuário atualizado com sucesso!' : 'Usuário cadastrado com sucesso!');
-          window.location.href = '/usuarios';
+          this.$refs.toast.show(this.id > 0 ? 'Usuário atualizado com sucesso!' : 'Usuário cadastrado com sucesso!');
+          setTimeout(() => { window.location.href = '/usuarios'; }, 1500);
         })
         .catch(err => {
           console.error('Erro:', err);
