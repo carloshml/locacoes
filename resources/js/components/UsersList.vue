@@ -68,7 +68,7 @@
             <td class="px-6 py-4">
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center overflow-hidden">
-                  <img v-if="user.avatar" :src="'/storage/' + user.avatar" class="w-full h-full object-cover">
+                  <img v-if="user.avatar" :src="user.avatar" class="w-full h-full object-cover">
                   <span v-else class="text-blue-700 font-semibold text-sm">
                     {{ user.name.charAt(0).toUpperCase() }}
                   </span>

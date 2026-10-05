@@ -175,7 +175,7 @@ export default {
             password: '',
             password_confirmation: ''
           };
-          this.avatarPreview = data.avatar ? `/storage/${data.avatar}` : `https://ui-avatars.com/api/?name=${data.name}&background=3b82f6&color=fff&size=96`;
+          this.avatarPreview = data.avatar ? data.avatar : `https://ui-avatars.com/api/?name=${data.name}&background=3b82f6&color=fff&size=96`;
         })
         .catch(err => console.error(err));
     },
@@ -183,6 +183,13 @@ export default {
     onFileChange(event) {
       const file = event.target.files[0];
       if (file) {
+        // Limite de 1 MB (base64 vira ~1.33 MB, seguro no post_max_size).
+        const MAX_BYTES = 1 * 1024 * 1024;
+        if (file.size > MAX_BYTES) {
+          this.$refs.toast.show('A imagem deve ter no máximo 1 MB.', 'error', 2500);
+          event.target.value = '';
+          return;
+        }
         this.avatarFile = file;
         const reader = new FileReader();
         reader.onload = (e) => {

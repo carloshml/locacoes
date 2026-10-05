@@ -97,8 +97,9 @@ export default {
   },
   computed: {
     avatarUrl() {
+      // avatar e armazenado como base64 (data:image/...). Usa direto.
       if (this.user?.avatar) {
-        return `/storage/${this.user.avatar}`;
+        return this.user.avatar;
       }
       return this.user ? `https://ui-avatars.com/api/?name=${this.user.name}&background=3b82f6&color=fff&size=128` : '';
     }

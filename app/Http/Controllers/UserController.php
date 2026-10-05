@@ -188,8 +188,11 @@ class UserController extends Controller
             return response()->json(['message' => 'Acesso negado.'], 403);
         }
 
+        // base64 de uma imagem de ~1MB tem ~1.4M caracteres; teto com folga.
         $request->validate([
-            'avatar' => 'required|string' // base64
+            'avatar' => 'required|string|max:1500000',
+        ], [
+            'avatar.max' => 'A imagem é muito grande. Use uma imagem de até 1 MB.',
         ]);
 
         $user = User::find($id);
@@ -203,27 +206,10 @@ class UserController extends Controller
             return response()->json(['message' => 'Formato de imagem inválido.'], 422);
         }
 
-        $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->avatar), true);
+        // Guarda o base64 direto no banco (mesma estrategia da foto do cliente).
+        $user->update(['avatar' => $request->avatar]);
 
-        if ($image === false) {
-            return response()->json(['message' => 'Imagem inválida.'], 422);
-        }
-
-        // Limite de ~2MB para o conteudo decodificado.
-        if (strlen($image) > 2 * 1024 * 1024) {
-            return response()->json(['message' => 'Imagem muito grande (máx. 2MB).'], 422);
-        }
-
-        if ($user->avatar) {
-            Storage::disk('public')->delete($user->avatar);
-        }
-
-        $filename = 'avatars/' . uniqid() . '.png';
-        Storage::disk('public')->put($filename, $image);
-
-        $user->update(['avatar' => $filename]);
-
-        return response()->json(['avatar' => $filename]);
+        return response()->json(['avatar' => $user->avatar]);
     }
 
     public function getActivities(Request $request, $id)
