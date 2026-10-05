@@ -36,6 +36,55 @@ class LocacaoItemController extends Controller
         return response()->json($locacoes);
     }
 
+    /**
+     * Listagem paginada no servidor (mesmos filtros do list() + busca + paginacao).
+     * Query params: page, per_page, search, sort, order, inicio, fim, cliente_id, item_id, status
+     */
+    public function paginated(Request $request)
+    {
+        $perPage = min((int) $request->input('per_page', 10), 100);
+        $search = trim((string) $request->input('search', ''));
+        $sort = $request->input('sort', 'inicio');
+        $order = strtolower($request->input('order', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        $sortable = ['inicio', 'fim', 'location', 'valor', 'status'];
+        if (!in_array($sort, $sortable, true)) {
+            $sort = 'inicio';
+        }
+
+        $query = LocacaoItem::with(['item', 'cliente'])
+            ->where('user_id', $request->user()->id);
+
+        if ($request->filled('inicio')) {
+            $query->where('inicio', '>=', $request->inicio);
+        }
+        if ($request->filled('fim')) {
+            $query->where('fim', '<=', $request->fim);
+        }
+        if ($request->filled('cliente_id')) {
+            $query->where('cliente_id', $request->cliente_id);
+        }
+        if ($request->filled('item_id')) {
+            $query->where('item_id', $request->item_id);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Busca textual por location, nome do cliente ou nome do item.
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('location', 'like', "%{$search}%")
+                  ->orWhereHas('cliente', fn ($c) => $c->where('nome', 'like', "%{$search}%"))
+                  ->orWhereHas('item', fn ($i) => $i->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        $locacoes = $query->orderBy($sort, $order)->paginate($perPage);
+
+        return response()->json($locacoes);
+    }
+
     public function faturamento(Request $request)
     {
         $mesesPt = [

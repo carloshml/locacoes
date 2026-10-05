@@ -13,6 +13,39 @@ class ClienteController extends Controller
         return response()->json($clientes);
     }
 
+    /**
+     * Listagem paginada no servidor (busca + ordenacao + paginacao).
+     * Endpoint separado do list() para nao afetar quem consome a lista completa.
+     *
+     * Query params: page, per_page, search, sort, order (asc|desc)
+     */
+    public function paginated(Request $request)
+    {
+        $perPage = min((int) $request->input('per_page', 10), 100);
+        $search = trim((string) $request->input('search', ''));
+        $sort = $request->input('sort', 'nome');
+        $order = strtolower($request->input('order', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        // Apenas colunas permitidas para ordenar (evita SQL injection no orderBy).
+        $sortable = ['nome', 'idade', 'documento', 'created_at'];
+        if (!in_array($sort, $sortable, true)) {
+            $sort = 'nome';
+        }
+
+        $query = Cliente::where('user_id', $request->user()->id);
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('nome', 'like', "%{$search}%")
+                  ->orWhere('documento', 'like', "%{$search}%");
+            });
+        }
+
+        $clientes = $query->orderBy($sort, $order)->paginate($perPage);
+
+        return response()->json($clientes);
+    }
+
     public function index(Request $request)
     {
         $clientes = Cliente::where('user_id', $request->user()->id)->get();

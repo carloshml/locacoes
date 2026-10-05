@@ -34,7 +34,7 @@
       <div class="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4">
         <div class="flex justify-between items-center text-white">
           <h2 class="text-xl font-bold">Lista de Clientes</h2>
-          <span class="bg-white/20 px-3 py-1 rounded-full text-sm font-medium">Total: {{ filteredClientes.length }}</span>
+          <span class="bg-white/20 px-3 py-1 rounded-full text-sm font-medium">Total: {{ total }}</span>
         </div>
       </div>
 
@@ -55,7 +55,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
-            <tr v-for="cliente in paginatedClientes" :key="cliente.id" class="hover:bg-gray-50 transition-colors">
+            <tr v-for="cliente in clientes" :key="cliente.id" class="hover:bg-gray-50 transition-colors">
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center">
@@ -84,7 +84,7 @@
         </table>
       </div>
 
-      <div v-if="filteredClientes.length === 0" class="text-center py-16">
+      <div v-if="clientes.length === 0" class="text-center py-16">
         <p class="text-gray-500 text-lg">Nenhum cliente encontrado.</p>
       </div>
 
@@ -105,41 +105,58 @@ import ToastMessage from './ToastMessage.vue';
 export default {
   components: { ToastMessage },
   data() {
-    return { clientes: [], loading: true, error: null, search: '', sortKey: 'nome', sortOrder: 'asc', currentPage: 1, itemsPerPage: 10 }
+    return {
+      clientes: [], loading: true, error: null,
+      search: '', sortKey: 'nome', sortOrder: 'asc',
+      currentPage: 1, itemsPerPage: 10,
+      totalPages: 1, total: 0,
+      searchTimer: null,
+    }
   },
-  computed: {
-    filteredClientes() {
-      let filtered = this.clientes;
-      if (this.search) {
-        const s = this.search.toLowerCase();
-        filtered = filtered.filter(c => c.nome.toLowerCase().includes(s) || c.documento.toLowerCase().includes(s));
-      }
-      filtered = [...filtered].sort((a, b) => {
-        let aV = a[this.sortKey], bV = b[this.sortKey];
-        if (this.sortKey === 'idade') { aV = Number(aV); bV = Number(bV); }
-        if (aV < bV) return this.sortOrder === 'asc' ? -1 : 1;
-        if (aV > bV) return this.sortOrder === 'asc' ? 1 : -1;
-        return 0;
-      });
-      return filtered;
+  watch: {
+    // Busca com debounce: espera o usuario parar de digitar antes de buscar.
+    search() {
+      clearTimeout(this.searchTimer);
+      this.searchTimer = setTimeout(() => { this.currentPage = 1; this.fetchClientes(); }, 400);
     },
-    paginatedClientes() { return this.filteredClientes.slice((this.currentPage-1)*this.itemsPerPage, this.currentPage*this.itemsPerPage); },
-    totalPages() { return Math.ceil(this.filteredClientes.length / this.itemsPerPage); }
+    itemsPerPage() { this.currentPage = 1; this.fetchClientes(); },
+    currentPage() { this.fetchClientes(); },
   },
-  watch: { search() { this.currentPage = 1; } },
   mounted() { this.fetchClientes(); },
   methods: {
     fetchClientes() {
       this.loading = true;
+      this.error = null;
       const token = localStorage.getItem('api_token');
       const headers = { 'Accept': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      fetch('/api/clientes', { headers })
-        .then(res => { if (res.status === 401) { window.location.href = '/login'; } return res.json(); })
-        .then(data => { this.clientes = data; this.loading = false; })
+
+      const params = new URLSearchParams({
+        page: this.currentPage,
+        per_page: this.itemsPerPage,
+        sort: this.sortKey,
+        order: this.sortOrder,
+      });
+      if (this.search) params.append('search', this.search);
+
+      fetch(`/api/clientes/paginated?${params.toString()}`, { headers })
+        .then(res => { if (res.status === 401) { window.location.href = '/login'; return; } return res.json(); })
+        .then(data => {
+          if (!data) return;
+          this.clientes = data.data || [];
+          this.total = data.total || 0;
+          this.totalPages = data.last_page || 1;
+          this.currentPage = data.current_page || 1;
+          this.loading = false;
+        })
         .catch(() => { this.error = 'Falha ao carregar'; this.loading = false; });
     },
-    sortBy(key) { if (this.sortKey === key) this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc'; else { this.sortKey = key; this.sortOrder = 'asc'; } },
+    sortBy(key) {
+      if (this.sortKey === key) this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+      else { this.sortKey = key; this.sortOrder = 'asc'; }
+      this.currentPage = 1;
+      this.fetchClientes();
+    },
     formatDocument(doc) { const c = doc.replace(/\D/g,''); if (c.length===11) return c.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'); if (c.length===14) return c.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5'); return doc; },
     viewCliente(id) { window.location.href = `/clientes/${id}`; },
     editCliente(id) { window.location.href = `/clientes/${id}/edit`; },

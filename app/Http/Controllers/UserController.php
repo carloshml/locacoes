@@ -17,6 +17,49 @@ class UserController extends Controller
         return response()->json($users);
     }
 
+    /**
+     * Listagem paginada no servidor (busca + filtros + paginacao).
+     * Query params: page, per_page, search, role, status (active|inactive), sort, order
+     */
+    public function paginated(Request $request)
+    {
+        $perPage = min((int) $request->input('per_page', 10), 100);
+        $search = trim((string) $request->input('search', ''));
+        $role = $request->input('role', '');
+        $status = $request->input('status', '');
+        $sort = $request->input('sort', 'name');
+        $order = strtolower($request->input('order', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        $sortable = ['name', 'email', 'last_login_at', 'created_at'];
+        if (!in_array($sort, $sortable, true)) {
+            $sort = 'name';
+        }
+
+        $query = User::with('profile');
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('position', 'like', "%{$search}%");
+            });
+        }
+
+        if (in_array($role, ['admin', 'manager', 'user'], true)) {
+            $query->where('role', $role);
+        }
+
+        if ($status === 'active') {
+            $query->where('is_active', true);
+        } elseif ($status === 'inactive') {
+            $query->where('is_active', false);
+        }
+
+        $users = $query->orderBy($sort, $order)->paginate($perPage);
+
+        return response()->json($users);
+    }
+
     public function getById($id)
     {
         $user = User::with('profile')->find($id);

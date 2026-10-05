@@ -64,7 +64,7 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
-          <tr v-for="user in filteredUsers" :key="user.id" class="hover:bg-gray-50 transition">
+          <tr v-for="user in users" :key="user.id" class="hover:bg-gray-50 transition">
             <td class="px-6 py-4">
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center overflow-hidden">
@@ -118,6 +118,18 @@
           </tr>
         </tbody>
       </table>
+
+      <div v-if="users.length === 0" class="text-center py-16">
+        <p class="text-gray-500 text-lg">Nenhum usuário encontrado.</p>
+      </div>
+
+      <div v-if="totalPages > 1" class="px-6 py-4 border-t flex justify-between items-center">
+        <span class="text-sm text-gray-600">Página {{ currentPage }} de {{ totalPages }} ({{ total }} usuários)</span>
+        <div class="flex gap-2">
+          <button @click="currentPage--" :disabled="currentPage === 1" class="px-3 py-1 border rounded-lg disabled:opacity-50">Anterior</button>
+          <button @click="currentPage++" :disabled="currentPage === totalPages" class="px-3 py-1 border rounded-lg disabled:opacity-50">Próxima</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -134,34 +146,22 @@ export default {
       search: '',
       filtroRole: '',
       filtroStatus: '',
-      currentUserId: null
+      currentUserId: null,
+      currentPage: 1,
+      itemsPerPage: 10,
+      totalPages: 1,
+      total: 0,
+      searchTimer: null,
     }
   },
-  computed: {
-    filteredUsers() {
-      let filtered = this.users;
-      
-      if (this.search) {
-        const searchLower = this.search.toLowerCase();
-        filtered = filtered.filter(user =>
-          user.name.toLowerCase().includes(searchLower) ||
-          user.email.toLowerCase().includes(searchLower) ||
-          (user.position && user.position.toLowerCase().includes(searchLower))
-        );
-      }
-      
-      if (this.filtroRole) {
-        filtered = filtered.filter(user => user.role === this.filtroRole);
-      }
-      
-      if (this.filtroStatus === 'active') {
-        filtered = filtered.filter(user => user.is_active);
-      } else if (this.filtroStatus === 'inactive') {
-        filtered = filtered.filter(user => !user.is_active);
-      }
-      
-      return filtered;
-    }
+  watch: {
+    search() {
+      clearTimeout(this.searchTimer);
+      this.searchTimer = setTimeout(() => { this.currentPage = 1; this.fetchUsers(); }, 400);
+    },
+    filtroRole() { this.currentPage = 1; this.fetchUsers(); },
+    filtroStatus() { this.currentPage = 1; this.fetchUsers(); },
+    currentPage() { this.fetchUsers(); },
   },
   mounted() {
     this.currentUserId = document.querySelector('meta[name="user-id"]')?.content;
@@ -169,8 +169,18 @@ export default {
   },
   methods: {
     fetchUsers() {
+      this.loading = true;
       const token = localStorage.getItem('api_token');
-      fetch('/api/usuarios', {
+
+      const params = new URLSearchParams({
+        page: this.currentPage,
+        per_page: this.itemsPerPage,
+      });
+      if (this.search) params.append('search', this.search);
+      if (this.filtroRole) params.append('role', this.filtroRole);
+      if (this.filtroStatus) params.append('status', this.filtroStatus);
+
+      fetch(`/api/usuarios/paginated?${params.toString()}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'
@@ -178,7 +188,10 @@ export default {
       })
         .then(res => res.json())
         .then(data => {
-          this.users = data;
+          this.users = data.data || [];
+          this.total = data.total || 0;
+          this.totalPages = data.last_page || 1;
+          this.currentPage = data.current_page || 1;
           this.loading = false;
         })
         .catch(err => {

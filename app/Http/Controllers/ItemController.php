@@ -15,6 +15,34 @@ class ItemController extends Controller
         return response()->json($items);
     }
 
+    /**
+     * Listagem paginada no servidor (busca + ordenacao + paginacao).
+     * Query params: page, per_page, search, sort, order (asc|desc)
+     */
+    public function paginated(Request $request)
+    {
+        $perPage = min((int) $request->input('per_page', 10), 100);
+        $search = trim((string) $request->input('search', ''));
+        $sort = $request->input('sort', 'name');
+        $order = strtolower($request->input('order', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        $sortable = ['name', 'valor', 'created_at'];
+        if (!in_array($sort, $sortable, true)) {
+            $sort = 'name';
+        }
+
+        $query = Item::with('locacaoAtiva')
+            ->where('user_id', $request->user()->id);
+
+        if ($search !== '') {
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        $items = $query->orderBy($sort, $order)->paginate($perPage);
+
+        return response()->json($items);
+    }
+
     public function getById(Request $request, $id)
     {
         $item = Item::with('locacoes.cliente')

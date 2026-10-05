@@ -34,7 +34,7 @@
       <div class="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4">
         <div class="flex justify-between items-center text-white">
           <h2 class="text-xl font-bold">Lista de Itens</h2>
-          <span class="bg-white/20 px-3 py-1 rounded-full text-sm font-medium">Total: {{ filteredItems.length }}</span>
+          <span class="bg-white/20 px-3 py-1 rounded-full text-sm font-medium">Total: {{ total }}</span>
         </div>
       </div>
 
@@ -51,7 +51,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
-            <tr v-for="item in paginatedItems" :key="item.id" class="hover:bg-gray-50 transition-colors">
+            <tr v-for="item in items" :key="item.id" class="hover:bg-gray-50 transition-colors">
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 bg-gradient-to-br from-teal-100 to-teal-200 rounded-full flex items-center justify-center">
@@ -93,7 +93,7 @@
         </table>
       </div>
 
-      <div v-if="filteredItems.length === 0" class="text-center py-16">
+      <div v-if="items.length === 0" class="text-center py-16">
         <p class="text-gray-500 text-lg">Nenhum item encontrado.</p>
       </div>
 
@@ -114,46 +114,56 @@ import ToastMessage from './ToastMessage.vue';
 export default {
   components: { ToastMessage },
   data() {
-    return { items: [], loading: true, error: null, search: '', sortKey: 'name', sortOrder: 'asc', currentPage: 1, itemsPerPage: 10 }
+    return {
+      items: [], loading: true, error: null,
+      search: '', sortKey: 'name', sortOrder: 'asc',
+      currentPage: 1, itemsPerPage: 10,
+      totalPages: 1, total: 0,
+      searchTimer: null,
+    }
   },
-  computed: {
-    filteredItems() {
-      let filtered = this.items;
-      if (this.search) {
-        const s = this.search.toLowerCase();
-        filtered = filtered.filter(i => i.name.toLowerCase().includes(s));
-      }
-      filtered = [...filtered].sort((a, b) => {
-        let aV = (a[this.sortKey] || '').toString().toLowerCase();
-        let bV = (b[this.sortKey] || '').toString().toLowerCase();
-        if (aV < bV) return this.sortOrder === 'asc' ? -1 : 1;
-        if (aV > bV) return this.sortOrder === 'asc' ? 1 : -1;
-        return 0;
-      });
-      return filtered;
+  watch: {
+    search() {
+      clearTimeout(this.searchTimer);
+      this.searchTimer = setTimeout(() => { this.currentPage = 1; this.fetchItems(); }, 400);
     },
-    paginatedItems() {
-      const start = (this.currentPage - 1) * this.itemsPerPage;
-      return this.filteredItems.slice(start, start + this.itemsPerPage);
-    },
-    totalPages() { return Math.ceil(this.filteredItems.length / this.itemsPerPage); }
+    itemsPerPage() { this.currentPage = 1; this.fetchItems(); },
+    currentPage() { this.fetchItems(); },
   },
-  watch: { search() { this.currentPage = 1; } },
   mounted() { this.fetchItems(); },
   methods: {
     fetchItems() {
       this.loading = true;
+      this.error = null;
       const token = localStorage.getItem('api_token');
       const headers = { 'Accept': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      fetch('/api/items', { headers })
-        .then(res => { if (res.status === 401) { window.location.href = '/login'; } return res.json(); })
-        .then(data => { this.items = data; this.loading = false; })
+
+      const params = new URLSearchParams({
+        page: this.currentPage,
+        per_page: this.itemsPerPage,
+        sort: this.sortKey,
+        order: this.sortOrder,
+      });
+      if (this.search) params.append('search', this.search);
+
+      fetch(`/api/items/paginated?${params.toString()}`, { headers })
+        .then(res => { if (res.status === 401) { window.location.href = '/login'; return; } return res.json(); })
+        .then(data => {
+          if (!data) return;
+          this.items = data.data || [];
+          this.total = data.total || 0;
+          this.totalPages = data.last_page || 1;
+          this.currentPage = data.current_page || 1;
+          this.loading = false;
+        })
         .catch(() => { this.error = 'Falha ao carregar'; this.loading = false; });
     },
     sortBy(key) {
       if (this.sortKey === key) { this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc'; }
       else { this.sortKey = key; this.sortOrder = 'asc'; }
+      this.currentPage = 1;
+      this.fetchItems();
     },
     viewItem(id) { window.location.href = `/itens/${id}`; },
     editItem(id) { window.location.href = `/itens/${id}/edit`; },

@@ -22,6 +22,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rotas de Clientes
     Route::prefix('clientes')->group(function () {
         Route::get('/', [ClienteController::class, 'list']);
+        Route::get('/paginated', [ClienteController::class, 'paginated']);
         Route::get('/stats', function(Request $request) {
             $clientes = \App\Models\Cliente::where('user_id', $request->user()->id)->get();
             return response()->json([
@@ -47,6 +48,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Gestao de usuarios — restrita a admin/manager
         Route::middleware('admin')->group(function () {
             Route::get('/', [UserController::class, 'list']);
+            Route::get('/paginated', [UserController::class, 'paginated']);
             Route::get('/{id}', [UserController::class, 'getById']);
             Route::post('/', [UserController::class, 'store']);
             Route::put('/{id}', [UserController::class, 'update']);
@@ -58,6 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rotas de Itens
     Route::prefix('items')->group(function () {
         Route::get('/', [ItemController::class, 'list']);
+        Route::get('/paginated', [ItemController::class, 'paginated']);
         Route::get('/{id}', [ItemController::class, 'getById']);
         Route::post('/', [ItemController::class, 'store']);
         Route::put('/{id}', [ItemController::class, 'update']);
@@ -67,6 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rotas de Locação de Item
     Route::prefix('locacoes')->group(function () {
         Route::get('/', [LocacaoItemController::class, 'list']);
+        Route::get('/paginated', [LocacaoItemController::class, 'paginated']);
         Route::get('/faturamento', [LocacaoItemController::class, 'faturamento']);
         Route::get('/{id}', [LocacaoItemController::class, 'getById']);
         Route::post('/', [LocacaoItemController::class, 'store']);

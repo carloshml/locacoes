@@ -101,8 +101,7 @@
       <div class="bg-gradient-to-r from-amber-600 to-amber-700 px-6 py-4">
         <div class="flex justify-between items-center text-white">
           <h2 class="text-xl font-bold">Locações de Itens</h2>
-          <span class="bg-white/20 px-3 py-1 rounded-full text-sm font-medium">Total: {{ filteredLocacoes.length
-          }}</span>
+          <span class="bg-white/20 px-3 py-1 rounded-full text-sm font-medium">Total: {{ total }}</span>
         </div>
       </div>
 
@@ -136,7 +135,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
-            <tr v-for="loc in paginatedLocacoes" :key="loc.id" class="hover:bg-gray-50 transition-colors">
+            <tr v-for="loc in locacoes" :key="loc.id" class="hover:bg-gray-50 transition-colors">
               <td class="px-4 py-3 font-medium text-gray-900">{{ loc.item ? loc.item.name : '—' }}</td>
               <td class="px-4 py-3 text-gray-700">{{ loc.cliente ? loc.cliente.nome : '—' }} <span v-if="loc.cliente && loc.cliente.telefone" class="text-gray-500 text-sm">· {{ loc.cliente.telefone }}</span></td>
               <td class="px-4 py-3 text-gray-700">{{ loc.location }}</td>
@@ -184,7 +183,7 @@
         </table>
       </div>
 
-      <div v-if="filteredLocacoes.length === 0" class="text-center py-16">
+      <div v-if="locacoes.length === 0" class="text-center py-16">
         <p class="text-gray-500 text-lg">Nenhuma locação encontrada.</p>
       </div>
 
@@ -223,10 +222,13 @@ export default {
       loading: true,
       error: null,
       search: '',
-      sortKey: 'location',
-      sortOrder: 'asc',
+      sortKey: 'inicio',
+      sortOrder: 'desc',
       currentPage: 1,
       itemsPerPage: 10,
+      totalPages: 1,
+      total: 0,
+      searchTimer: null,
       dateFormats: {
         input: 'dd.MM.yyyy - HH:mm'
       },
@@ -239,58 +241,13 @@ export default {
       }
     }
   },
-  computed: {
-    filteredLocacoes() {
-      let filtered = this.locacoes;
-
-      // Busca textual
-      if (this.search) {
-        const s = this.search.toLowerCase();
-        filtered = filtered.filter(loc =>
-          (loc.item && loc.item.name && loc.item.name.toLowerCase().includes(s)) ||
-          (loc.cliente && loc.cliente.nome && loc.cliente.nome.toLowerCase().includes(s)) ||
-          (loc.location && loc.location.toLowerCase().includes(s))
-        );
-      }
-
-      // Ordenação
-      filtered = [...filtered].sort((a, b) => {
-        let aVal = a[this.sortKey];
-        let bVal = b[this.sortKey];
-
-        if (aVal === null || aVal === undefined) aVal = '';
-        if (bVal === null || bVal === undefined) bVal = '';
-
-        if (typeof aVal === 'string') {
-          aVal = aVal.toLowerCase();
-          bVal = bVal.toLowerCase();
-        }
-
-        if (this.sortKey === 'inicio' || this.sortKey === 'fim') {
-          aVal = new Date(aVal).getTime();
-          bVal = new Date(bVal).getTime();
-        }
-
-        if (aVal < bVal) return this.sortOrder === 'asc' ? -1 : 1;
-        if (aVal > bVal) return this.sortOrder === 'asc' ? 1 : -1;
-        return 0;
-      });
-
-      return filtered;
-    },
-    paginatedLocacoes() {
-      const start = (this.currentPage - 1) * this.itemsPerPage;
-      const end = start + this.itemsPerPage;
-      return this.filteredLocacoes.slice(start, end);
-    },
-    totalPages() {
-      return Math.ceil(this.filteredLocacoes.length / this.itemsPerPage);
-    }
-  },
   watch: {
     search() {
-      this.currentPage = 1;
-    }
+      clearTimeout(this.searchTimer);
+      this.searchTimer = setTimeout(() => { this.currentPage = 1; this.fetchLocacoes(); }, 400);
+    },
+    itemsPerPage() { this.currentPage = 1; this.fetchLocacoes(); },
+    currentPage() { this.fetchLocacoes(); },
   },
   mounted() {
     this.fetchSelects();
@@ -336,7 +293,14 @@ export default {
         params.append('status', this.filtros.status);
       }
 
-      const url = '/api/locacoes' + (params.toString() ? '?' + params.toString() : '');
+      // Paginacao + busca + ordenacao no servidor
+      params.append('page', this.currentPage);
+      params.append('per_page', this.itemsPerPage);
+      params.append('sort', this.sortKey);
+      params.append('order', this.sortOrder);
+      if (this.search) params.append('search', this.search);
+
+      const url = '/api/locacoes/paginated?' + params.toString();
 
       fetch(url, { headers: this.getHeaders() })
         .then(res => {
@@ -351,7 +315,10 @@ export default {
         })
         .then(data => {
           if (data) {
-            this.locacoes = data;
+            this.locacoes = data.data || [];
+            this.total = data.total || 0;
+            this.totalPages = data.last_page || 1;
+            this.currentPage = data.current_page || 1;
           }
           this.loading = false;
         })
@@ -445,6 +412,8 @@ export default {
         this.sortKey = key;
         this.sortOrder = 'asc';
       }
+      this.currentPage = 1;
+      this.fetchLocacoes();
     }
   }
 }
