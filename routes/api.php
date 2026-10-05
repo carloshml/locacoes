@@ -13,8 +13,10 @@ use App\Http\Controllers\AuthApiController;
 // Login publico com rate limiting (anti brute-force / bots).
 Route::post('/login', [AuthApiController::class, 'login'])->middleware('throttle:5,1');
 
-// Rotas protegidas pelo Sanctum
-Route::middleware('auth:sanctum')->group(function () {
+// Rotas protegidas pelo Sanctum.
+// throttle:120,1 = no maximo 120 requisicoes por minuto por usuario autenticado
+// (folgado para uso normal da SPA/app, mas corta abuso/scraping/DoS leve).
+Route::middleware(['auth:sanctum', 'throttle:120,1'])->group(function () {
     // Autenticacao mobile (precisa de token)
     Route::get('/me', [AuthApiController::class, 'me']);
     Route::post('/logout', [AuthApiController::class, 'logout']);
