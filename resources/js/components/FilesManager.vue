@@ -44,12 +44,30 @@
             <td class="py-3 px-2 text-gray-800 break-all">{{ f.name }}</td>
             <td class="py-3 px-2 text-gray-600 text-sm">{{ f.size_human }}</td>
             <td class="py-3 px-2 text-right space-x-2">
+              <button v-if="isImagem(f.name)" @click="visualizar(f)" class="text-purple-600 hover:text-purple-800 text-sm font-medium">Visualizar</button>
               <button @click="download(f)" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Baixar</button>
               <button @click="remover(f)" class="text-red-600 hover:text-red-800 text-sm font-medium">Excluir</button>
             </td>
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Modal de visualizacao de imagem -->
+    <div v-if="preview.open"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+      @click.self="fecharPreview">
+      <div class="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-3 border-b">
+          <span class="font-medium text-gray-800 break-all">{{ preview.name }}</span>
+          <button @click="fecharPreview" class="text-gray-500 hover:text-gray-800 text-xl leading-none">&times;</button>
+        </div>
+        <div class="p-4 overflow-auto flex items-center justify-center bg-gray-50">
+          <div v-if="preview.loading" class="py-16 text-gray-500">Carregando imagem...</div>
+          <img v-else-if="preview.url" :src="preview.url" :alt="preview.name" class="max-w-full max-h-[70vh] object-contain">
+          <div v-else class="py-16 text-red-600">Falha ao carregar a imagem.</div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -64,6 +82,7 @@ export default {
       progress: 0,
       loading: true,
       erro: '',
+      preview: { open: false, loading: false, url: '', name: '' },
     };
   },
   mounted() {
@@ -155,6 +174,25 @@ export default {
           window.URL.revokeObjectURL(url);
         })
         .catch(() => { this.erro = 'Falha ao baixar o arquivo.'; });
+    },
+    isImagem(nome) {
+      return /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(nome || '');
+    },
+    visualizar(f) {
+      // Abre o modal e busca a imagem autenticada (o endpoint exige token,
+      // por isso baixamos como blob em vez de usar a URL direto no <img>).
+      this.preview = { open: true, loading: true, url: '', name: f.name };
+      fetch(`/api/arquivos/${f.id}/download`, { headers: this.authHeaders() })
+        .then(res => { if (!res.ok) throw new Error(); return res.blob(); })
+        .then(blob => {
+          this.preview.url = window.URL.createObjectURL(blob);
+          this.preview.loading = false;
+        })
+        .catch(() => { this.preview.loading = false; });
+    },
+    fecharPreview() {
+      if (this.preview.url) window.URL.revokeObjectURL(this.preview.url);
+      this.preview = { open: false, loading: false, url: '', name: '' };
     },
     remover(f) {
       if (!confirm(`Excluir "${f.name}"? Esta ação não pode ser desfeita.`)) return;
