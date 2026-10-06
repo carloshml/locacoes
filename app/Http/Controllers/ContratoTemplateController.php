@@ -50,9 +50,21 @@ class ContratoTemplateController extends Controller
         ]);
 
         $userId = $request->user()->id;
+        $disk = Storage::disk('local');
+        $path = $this->pathFor($userId);
+
+        // Garante que o diretorio exista e seja gravavel antes de salvar.
+        $disk->makeDirectory(self::DIR);
 
         // Nome fixo por usuario (sem path traversal): {id}.docx
-        $request->file('file')->storeAs(self::DIR, $userId . '.docx', 'local');
+        $stored = $request->file('file')->storeAs(self::DIR, $userId . '.docx', 'local');
+
+        // Nao confia no retorno: confirma que o arquivo foi realmente gravado.
+        if ($stored === false || !$disk->exists($path)) {
+            return response()->json([
+                'message' => 'Não foi possível salvar o modelo no servidor. Verifique as permissões de escrita em storage/app/templates.',
+            ], 500);
+        }
 
         return response()->json(['message' => 'Modelo de contrato enviado com sucesso.']);
     }
