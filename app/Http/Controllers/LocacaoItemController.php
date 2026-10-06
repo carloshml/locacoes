@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\LocacaoItem;
+use PhpOffice\PhpWord\TemplateProcessor;
 
 class LocacaoItemController extends Controller
 {
@@ -238,5 +239,60 @@ class LocacaoItemController extends Controller
         $locacao->update($dataToUpdate);
 
         return response()->json($locacao->load(['item', 'cliente']));
+    }
+
+    /**
+     * Gera o contrato em Word (.docx) preenchido com os dados da locacao,
+     * a partir do modelo em storage/app/templates/contrato.docx.
+     */
+    public function gerarContrato(Request $request, string $id)
+    {
+        $locacao = LocacaoItem::with(['item', 'cliente'])
+            ->where('user_id', $request->user()->id)
+            ->find($id);
+
+        if (!$locacao) {
+            return response()->json(['message' => 'Locação não encontrada'], 404);
+        }
+
+        $templatePath = storage_path('app/templates/contrato.docx');
+        if (!file_exists($templatePath)) {
+            return response()->json(['message' => 'Modelo de contrato não encontrado no servidor.'], 500);
+        }
+
+        $cliente = $locacao->cliente;
+
+        $fmtData = fn ($d) => $d ? \Illuminate\Support\Carbon::parse($d)->format('d/m/Y H:i') : '';
+        $fmtMoeda = fn ($v) => 'R$ ' . number_format((float) $v, 2, ',', '.');
+
+        try {
+            $tpl = new TemplateProcessor($templatePath);
+
+            // Preenche apenas os campos que o sistema possui. Os demais ficam
+            // em branco no modelo para preenchimento manual.
+            $tpl->setValues([
+                'cliente_nome'      => $cliente->nome ?? '',
+                'cliente_cpf'       => $cliente->documento ?? '',
+                'cliente_telefone'  => $cliente->telefone ?? '',
+                'cliente_endereco'  => $cliente->endereco ?? '',
+                'data_evento'       => $fmtData($locacao->inicio),
+                'retirada'          => $fmtData($locacao->inicio),
+                'devolucao'         => $fmtData($locacao->fim),
+                'valor_total'       => $fmtMoeda($locacao->valor),
+            ]);
+
+            $tmpFile = tempnam(sys_get_temp_dir(), 'contrato') . '.docx';
+            $tpl->saveAs($tmpFile);
+
+            $nomeArquivo = 'contrato-locacao-' . $locacao->id . '.docx';
+
+            return response()->download($tmpFile, $nomeArquivo, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            ])->deleteFileAfterSend(true);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Falha ao gerar o contrato: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

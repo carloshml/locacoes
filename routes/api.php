@@ -75,6 +75,7 @@ Route::middleware(['auth:sanctum', 'throttle:120,1'])->group(function () {
         Route::get('/paginated', [LocacaoItemController::class, 'paginated']);
         Route::get('/faturamento', [LocacaoItemController::class, 'faturamento']);
         Route::get('/{id}', [LocacaoItemController::class, 'getById']);
+        Route::get('/{id}/contrato', [LocacaoItemController::class, 'gerarContrato']);
         Route::post('/', [LocacaoItemController::class, 'store']);
         Route::put('/{id}', [LocacaoItemController::class, 'update']);
         Route::patch('/{id}/status', [LocacaoItemController::class, 'updateStatus']);

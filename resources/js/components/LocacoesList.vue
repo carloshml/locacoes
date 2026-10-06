@@ -163,6 +163,13 @@
                       </path>
                     </svg>
                   </button>
+                  <button @click="gerarContrato(loc)" class="text-indigo-600 hover:text-indigo-800" title="Gerar contrato (Word)">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                      </path>
+                    </svg>
+                  </button>
                   <button v-if="loc.status === 'ativo'" @click="finalizarLoc(loc.id)"
                     class="text-green-600 hover:text-green-800" title="Finalizar">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -371,6 +378,29 @@ export default {
     },
     verLoc(id) {
       window.location.href = `/locacoes/${id}`;
+    },
+    gerarContrato(loc) {
+      // Baixa o .docx autenticado (a rota exige token Bearer).
+      fetch(`/api/locacoes/${loc.id}/contrato`, { headers: this.getHeaders() })
+        .then(async res => {
+          if (!res.ok) {
+            const d = await res.json().catch(() => ({}));
+            throw new Error(d.message || 'Falha ao gerar o contrato.');
+          }
+          return res.blob();
+        })
+        .then(blob => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `contrato-locacao-${loc.id}.docx`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+          this.$refs.toast.show('Contrato gerado!');
+        })
+        .catch(err => this.$refs.toast.show(err.message || 'Falha ao gerar o contrato.', 'error'));
     },
     finalizarLoc(id) {
       if (!confirm('Finalizar esta locação?')) return;
