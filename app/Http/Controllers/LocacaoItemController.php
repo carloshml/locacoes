@@ -257,7 +257,9 @@ class LocacaoItemController extends Controller
 
         // Usa o modelo do usuario dono da locacao. Sem modelo proprio, nao gera
         // (sem fallback) e avisa para subir um modelo em "Meu Perfil".
-        $templatePath = storage_path('app/templates/usuarios/' . $locacao->user_id . '.docx');
+        // Resolve pelo disco 'local' (respeita o root configurado, ex.: app/private).
+        $relativePath = 'templates/usuarios/' . $locacao->user_id . '.docx';
+        $templatePath = \Illuminate\Support\Facades\Storage::disk('local')->path($relativePath);
         if (!file_exists($templatePath)) {
             return response()->json([
                 'message' => 'Você ainda não possui um modelo de contrato. Envie seu modelo em "Meu Perfil" antes de gerar o contrato.',

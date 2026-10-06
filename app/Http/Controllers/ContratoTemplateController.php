@@ -30,7 +30,7 @@ class ContratoTemplateController extends Controller
             return response()->json([
                 'has_template' => false,
                 // Caminho absoluto onde o modelo SERIA salvo (debug/teste).
-                'absolute_path' => storage_path('app/' . $path),
+                'absolute_path' => $disk->path($path),
             ]);
         }
 
@@ -39,7 +39,7 @@ class ContratoTemplateController extends Controller
             'size' => $disk->size($path),
             'updated_at' => $disk->lastModified($path),
             // Caminho absoluto do arquivo na maquina/servidor (debug/teste).
-            'absolute_path' => storage_path('app/' . $path),
+            'absolute_path' => $disk->path($path),
         ]);
     }
 
