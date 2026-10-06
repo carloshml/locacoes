@@ -255,9 +255,14 @@ class LocacaoItemController extends Controller
             return response()->json(['message' => 'Locação não encontrada'], 404);
         }
 
-        $templatePath = storage_path('app/templates/contrato.docx');
+        // Usa o modelo do usuario dono da locacao. Sem modelo proprio, nao gera
+        // (sem fallback) e avisa para subir um modelo em "Meu Perfil".
+        $templatePath = storage_path('app/templates/usuarios/' . $locacao->user_id . '.docx');
         if (!file_exists($templatePath)) {
-            return response()->json(['message' => 'Modelo de contrato não encontrado no servidor.'], 500);
+            return response()->json([
+                'message' => 'Você ainda não possui um modelo de contrato. Envie seu modelo em "Meu Perfil" antes de gerar o contrato.',
+                'needs_template' => true,
+            ], 422);
         }
 
         $cliente = $locacao->cliente;

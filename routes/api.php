@@ -8,6 +8,7 @@ use App\Http\Controllers\ItemController;
 use App\Http\Controllers\LocacaoItemController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\AuthApiController;
+use App\Http\Controllers\ContratoTemplateController;
 
 // ===== Autenticacao mobile (stateless, sem sessao/CSRF) =====
 // Login publico com rate limiting (anti brute-force / bots).
@@ -20,6 +21,14 @@ Route::middleware(['auth:sanctum', 'throttle:120,1'])->group(function () {
     // Autenticacao mobile (precisa de token)
     Route::get('/me', [AuthApiController::class, 'me']);
     Route::post('/logout', [AuthApiController::class, 'logout']);
+
+    // Modelo de contrato do proprio usuario
+    Route::prefix('meu-contrato')->group(function () {
+        Route::get('/', [ContratoTemplateController::class, 'status']);
+        Route::post('/', [ContratoTemplateController::class, 'upload']);
+        Route::get('/download', [ContratoTemplateController::class, 'download']);
+        Route::delete('/', [ContratoTemplateController::class, 'destroy']);
+    });
 
     // Rotas de Clientes
     Route::prefix('clientes')->group(function () {

@@ -104,6 +104,59 @@
           </button>
         </div>
       </form>
+
+      <!-- Modelo de Contrato (por usuario) -->
+      <div class="border-t pt-5 mt-8">
+        <h3 class="text-lg font-semibold text-gray-800 mb-1">Modelo de Contrato</h3>
+        <p class="text-gray-500 text-sm mb-4">
+          Envie seu modelo de contrato em Word (.docx). Ele será usado ao gerar o
+          contrato de uma locação. Use os marcadores
+          <code>${'{'}cliente_nome{'}'}</code>, <code>${'{'}cliente_cpf{'}'}</code>,
+          <code>${'{'}cliente_telefone{'}'}</code>, <code>${'{'}cliente_endereco{'}'}</code>,
+          <code>${'{'}data_evento{'}'}</code>, <code>${'{'}retirada{'}'}</code>,
+          <code>${'{'}devolucao{'}'}</code>, <code>${'{'}valor_total{'}'}</code>
+          onde quiser que os dados sejam preenchidos.
+        </p>
+
+        <div v-if="contratoMsg" class="mb-3 p-3 bg-green-50 border-l-4 border-green-500 rounded">
+          <p class="text-green-600 text-sm">{{ contratoMsg }}</p>
+        </div>
+        <div v-if="contratoErro" class="mb-3 p-3 bg-red-50 border-l-4 border-red-500 rounded">
+          <p class="text-red-600 text-sm">{{ contratoErro }}</p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div class="flex-1">
+            <span v-if="temModelo" class="inline-flex items-center gap-2 text-green-700 text-sm">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Modelo enviado.
+            </span>
+            <span v-else class="inline-flex items-center gap-2 text-amber-700 text-sm">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"></path>
+              </svg>
+              Você ainda não enviou um modelo.
+            </span>
+          </div>
+
+          <input type="file" ref="contratoInput" accept=".docx" @change="onContratoSelected" class="hidden">
+          <button type="button" @click="$refs.contratoInput.click()" :disabled="contratoUploading"
+            class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50">
+            {{ contratoUploading ? 'Enviando...' : (temModelo ? 'Substituir modelo' : 'Enviar modelo (.docx)') }}
+          </button>
+          <button v-if="temModelo" type="button" @click="baixarModelo"
+            class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition">
+            Baixar
+          </button>
+          <button v-if="temModelo" type="button" @click="removerModelo"
+            class="bg-red-100 text-red-700 px-4 py-2 rounded-lg hover:bg-red-200 transition">
+            Remover
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -136,13 +189,79 @@ export default {
       avatarPreview: '',
       loading: false,
       successMessage: '',
-      errorMessage: ''
+      errorMessage: '',
+      // Modelo de contrato do usuario
+      temModelo: false,
+      contratoUploading: false,
+      contratoMsg: '',
+      contratoErro: '',
     }
   },
   mounted() {
     this.fetchUserData();
+    this.carregarStatusContrato();
   },
   methods: {
+    headersAuth(extra = {}) {
+      const token = localStorage.getItem('api_token');
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+      const h = { 'Accept': 'application/json', ...extra };
+      if (token) h['Authorization'] = `Bearer ${token}`;
+      if (csrf) h['X-CSRF-TOKEN'] = csrf;
+      return h;
+    },
+    carregarStatusContrato() {
+      fetch('/api/meu-contrato', { headers: this.headersAuth() })
+        .then(res => res.json())
+        .then(data => { this.temModelo = !!data.has_template; })
+        .catch(() => {});
+    },
+    onContratoSelected(e) {
+      this.contratoMsg = '';
+      this.contratoErro = '';
+      const file = e.target.files[0];
+      if (!file) return;
+      if (!file.name.toLowerCase().endsWith('.docx')) {
+        this.contratoErro = 'O modelo deve ser um arquivo .docx (Word).';
+        e.target.value = '';
+        return;
+      }
+      this.contratoUploading = true;
+      const fd = new FormData();
+      fd.append('file', file);
+      fetch('/api/meu-contrato', { method: 'POST', headers: this.headersAuth(), body: fd })
+        .then(async res => {
+          const d = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(d.message || 'Falha ao enviar o modelo.');
+          this.temModelo = true;
+          this.contratoMsg = d.message || 'Modelo enviado com sucesso.';
+        })
+        .catch(err => { this.contratoErro = err.message; })
+        .finally(() => { this.contratoUploading = false; if (this.$refs.contratoInput) this.$refs.contratoInput.value = ''; });
+    },
+    baixarModelo() {
+      fetch('/api/meu-contrato/download', { headers: this.headersAuth() })
+        .then(res => { if (!res.ok) throw new Error(); return res.blob(); })
+        .then(blob => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = 'meu-modelo-contrato.docx';
+          document.body.appendChild(a); a.click(); a.remove();
+          window.URL.revokeObjectURL(url);
+        })
+        .catch(() => { this.contratoErro = 'Falha ao baixar o modelo.'; });
+    },
+    removerModelo() {
+      if (!confirm('Remover seu modelo de contrato?')) return;
+      fetch('/api/meu-contrato', { method: 'DELETE', headers: this.headersAuth() })
+        .then(async res => {
+          const d = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(d.message || 'Falha ao remover.');
+          this.temModelo = false;
+          this.contratoMsg = d.message || 'Modelo removido.';
+        })
+        .catch(err => { this.contratoErro = err.message; });
+    },
     fetchUserData() {
       const token = localStorage.getItem('api_token');
       

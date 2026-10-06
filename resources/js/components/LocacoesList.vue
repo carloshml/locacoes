@@ -400,7 +400,7 @@ export default {
           window.URL.revokeObjectURL(url);
           this.$refs.toast.show('Contrato gerado!');
         })
-        .catch(err => this.$refs.toast.show(err.message || 'Falha ao gerar o contrato.', 'error'));
+        .catch(err => this.$refs.toast.show(err.message || 'Falha ao gerar o contrato.', 'error', 5000));
     },
     finalizarLoc(id) {
       if (!confirm('Finalizar esta locação?')) return;
