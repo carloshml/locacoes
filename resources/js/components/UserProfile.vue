@@ -140,6 +140,9 @@
               </svg>
               Você ainda não enviou um modelo.
             </span>
+            <p v-if="contratoPath" class="mt-1 text-xs text-gray-400 break-all font-mono">
+              {{ temModelo ? 'Arquivo:' : 'Será salvo em:' }} {{ contratoPath }}
+            </p>
           </div>
 
           <input type="file" ref="contratoInput" accept=".docx" @change="onContratoSelected" class="hidden">
@@ -192,6 +195,7 @@ export default {
       errorMessage: '',
       // Modelo de contrato do usuario
       temModelo: false,
+      contratoPath: '',
       contratoUploading: false,
       contratoMsg: '',
       contratoErro: '',
@@ -213,7 +217,10 @@ export default {
     carregarStatusContrato() {
       fetch('/api/meu-contrato', { headers: this.headersAuth() })
         .then(res => res.json())
-        .then(data => { this.temModelo = !!data.has_template; })
+        .then(data => {
+          this.temModelo = !!data.has_template;
+          this.contratoPath = data.absolute_path || '';
+        })
         .catch(() => {});
     },
     onContratoSelected(e) {
@@ -235,6 +242,7 @@ export default {
           if (!res.ok) throw new Error(d.message || 'Falha ao enviar o modelo.');
           this.temModelo = true;
           this.contratoMsg = d.message || 'Modelo enviado com sucesso.';
+          this.carregarStatusContrato();
         })
         .catch(err => { this.contratoErro = err.message; })
         .finally(() => { this.contratoUploading = false; if (this.$refs.contratoInput) this.$refs.contratoInput.value = ''; });

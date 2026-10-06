@@ -27,13 +27,19 @@ class ContratoTemplateController extends Controller
         $disk = Storage::disk('local');
 
         if (!$disk->exists($path)) {
-            return response()->json(['has_template' => false]);
+            return response()->json([
+                'has_template' => false,
+                // Caminho absoluto onde o modelo SERIA salvo (debug/teste).
+                'absolute_path' => storage_path('app/' . $path),
+            ]);
         }
 
         return response()->json([
             'has_template' => true,
             'size' => $disk->size($path),
             'updated_at' => $disk->lastModified($path),
+            // Caminho absoluto do arquivo na maquina/servidor (debug/teste).
+            'absolute_path' => storage_path('app/' . $path),
         ]);
     }
 
