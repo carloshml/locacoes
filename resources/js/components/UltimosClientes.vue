@@ -91,7 +91,7 @@
                     <a :href="`/usuarios/${usuario.id}`" class="flex-1">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center overflow-hidden">
-                                <img v-if="usuario.avatar" :src="'/storage/' + usuario.avatar" class="w-full h-full object-cover">
+                                <img v-if="usuario.avatar" :src="usuario.avatar" class="w-full h-full object-cover">
                                 <span v-else class="text-blue-700 font-semibold">
                                     {{ usuario.name.charAt(0).toUpperCase() }}
                                 </span>

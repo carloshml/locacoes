@@ -162,7 +162,7 @@ export default {
             position: user.position || ''
           };
           this.profile = { ...this.profile, ...profile };
-          this.avatarPreview = user.avatar ? `/storage/${user.avatar}` : `https://ui-avatars.com/api/?name=${user.name}&background=8b5cf6&color=fff&size=128`;
+          this.avatarPreview = user.avatar ? user.avatar : `https://ui-avatars.com/api/?name=${user.name}&background=8b5cf6&color=fff&size=128`;
         })
         .catch(err => console.error(err));
     },
@@ -170,6 +170,13 @@ export default {
     onFileChange(event) {
       const file = event.target.files[0];
       if (file) {
+        // Limite de 1 MB (base64 vira ~1.33 MB, seguro no post_max_size).
+        if (file.size > 1 * 1024 * 1024) {
+          this.errorMessage = 'A imagem deve ter no máximo 1 MB.';
+          event.target.value = '';
+          return;
+        }
+        this.errorMessage = '';
         this.avatarFile = file;
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -181,22 +188,36 @@ export default {
 
     async uploadAvatar() {
       if (!this.avatarFile) return;
-      
+
       const token = localStorage.getItem('api_token');
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
       const reader = new FileReader();
-      
-      return new Promise((resolve) => {
+
+      return new Promise((resolve, reject) => {
         reader.onload = async (e) => {
           const base64 = e.target.result;
-          await fetch(`/api/usuarios/${this.id}/avatar`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ avatar: base64 })
-          });
-          resolve();
+          const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          };
+          if (token) headers['Authorization'] = `Bearer ${token}`;
+          if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken;
+
+          try {
+            const res = await fetch(`/api/usuarios/${this.id}/avatar`, {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({ avatar: base64 }),
+            });
+            if (!res.ok) {
+              const d = await res.json().catch(() => ({}));
+              reject(new Error(d.message || 'Falha ao salvar a imagem.'));
+              return;
+            }
+            resolve();
+          } catch (err) {
+            reject(err);
+          }
         };
         reader.readAsDataURL(this.avatarFile);
       });

@@ -85,7 +85,7 @@
               <td class="px-6 py-4">
                 <div class="flex items-center gap-2">
                   <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-                    <img v-if="log.user?.avatar" :src="'/storage/' + log.user.avatar" class="w-full h-full object-cover">
+                    <img v-if="log.user?.avatar" :src="log.user.avatar" class="w-full h-full object-cover">
                     <span v-else class="text-xs font-semibold">
                       {{ log.user?.name?.charAt(0) || 'S' }}
                     </span>
