@@ -41,10 +41,14 @@ class ContratoTemplateController extends Controller
     public function upload(Request $request)
     {
         $request->validate([
+            // Valida pela EXTENSAO do nome (.docx), nao pelo MIME detectado:
+            // um .docx e um ZIP, e varios servidores reportam o MIME como
+            // application/zip ou application/octet-stream, o que fazia a regra
+            // 'mimes:docx' rejeitar o arquivo e nada ser salvo (falso 422).
             // 10 MB e suficiente para um .docx de contrato com imagens.
-            'file' => 'required|file|mimes:docx|max:10240',
+            'file' => 'required|file|extensions:docx|max:10240',
         ], [
-            'file.mimes' => 'O modelo deve ser um arquivo .docx (Word).',
+            'file.extensions' => 'O modelo deve ser um arquivo .docx (Word).',
             'file.max' => 'O arquivo excede o limite de 10 MB.',
             'file.required' => 'Selecione um arquivo .docx.',
         ]);
