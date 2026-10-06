@@ -53,13 +53,20 @@
                     <div id="id2">
                         <!-- Perfil Card -->
                         <div class="bg-white border-2 border-gray-200 rounded-xl p-6">
-                            <div
-                                class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg w-16 h-16 flex items-center justify-center mb-4">
-                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                </svg>
-                            </div>
+                            @if(auth()->user()->avatar)
+                                <div class="w-16 h-16 rounded-lg overflow-hidden mb-4">
+                                    <img src="{{ auth()->user()->avatar }}" alt="Foto de {{ auth()->user()->name }}"
+                                        class="w-full h-full object-cover">
+                                </div>
+                            @else
+                                <div
+                                    class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg w-16 h-16 flex items-center justify-center mb-4">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                    </svg>
+                                </div>
+                            @endif
                             <h3 class="text-xl font-bold text-gray-800 mb-2">Meu Perfil</h3>
                             <p class="text-gray-600">{{ auth()->user()->email }}</p>
                             <div class="mt-4 text-gray-600 text-sm">
