@@ -189,6 +189,25 @@ class UserController extends Controller
         ]);
     }
 
+    public function getProfile(Request $request, $id)
+    {
+        // Apenas o proprio usuario ou um admin/manager pode ver o perfil.
+        if ((int) $id !== $request->user()->id && !$request->user()->isManager()) {
+            return response()->json(['message' => 'Acesso negado.'], 403);
+        }
+
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'Usuário não encontrado'], 404);
+        }
+
+        // Cria um perfil vazio na primeira vez para o front ter os campos.
+        $profile = $user->profile ?? UserProfile::create(['user_id' => $user->id]);
+
+        return response()->json($profile);
+    }
+
     public function updateProfile(Request $request, $id)
     {
         // Apenas o proprio usuario ou um admin/manager pode alterar o perfil.

@@ -53,6 +53,7 @@ Route::middleware(['auth:sanctum', 'throttle:120,1'])->group(function () {
         // Operacoes do proprio usuario (dono) ou admin — a checagem de dono
         // e feita no controller (ver updateProfile/updateAvatar/getActivities)
         Route::post('/{id}/avatar', [UserController::class, 'updateAvatar']);
+        Route::get('/{id}/profile', [UserController::class, 'getProfile']);
         Route::put('/{id}/profile', [UserController::class, 'updateProfile']);
         Route::get('/{id}/activities', [UserController::class, 'getActivities']);
 
