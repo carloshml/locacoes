@@ -10,3 +10,4 @@
         <locacoes-create :id="{{ $id }}"></locacoes-create>
     </div>
 @endsection
+

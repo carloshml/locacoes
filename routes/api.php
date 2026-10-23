@@ -6,6 +6,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\LocacaoItemController;
+use App\Http\Controllers\LocacaoController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\AuthApiController;
 use App\Http\Controllers\ContratoTemplateController;
@@ -79,7 +80,8 @@ Route::middleware(['auth:sanctum', 'throttle:120,1'])->group(function () {
         Route::delete('/{id}', [ItemController::class, 'destroy']);
     });
 
-    // Rotas de Locação de Item
+    // Rotas de Locação de Item (LEGADO — formato antigo, 1 registro por item).
+    // Mantidas intactas para não quebrar clientes já publicados (APK).
     Route::prefix('locacoes')->group(function () {
         Route::get('/', [LocacaoItemController::class, 'list']);
         Route::get('/paginated', [LocacaoItemController::class, 'paginated']);
@@ -90,6 +92,18 @@ Route::middleware(['auth:sanctum', 'throttle:120,1'])->group(function () {
         Route::put('/{id}', [LocacaoItemController::class, 'update']);
         Route::patch('/{id}/status', [LocacaoItemController::class, 'updateStatus']);
         Route::delete('/{id}', [LocacaoItemController::class, 'destroy']);
+    });
+
+    // Rotas de Locação multi-item (v2) — cabeça `locacoes` + 1..N itens.
+    Route::prefix('v2/locacoes')->group(function () {
+        Route::get('/paginated', [LocacaoController::class, 'paginated']);
+        Route::get('/faturamento', [LocacaoController::class, 'faturamento']);
+        Route::get('/{id}/contrato', [LocacaoController::class, 'gerarContrato']);
+        Route::get('/{id}', [LocacaoController::class, 'show']);
+        Route::post('/', [LocacaoController::class, 'store']);
+        Route::put('/{id}', [LocacaoController::class, 'update']);
+        Route::patch('/{id}/status', [LocacaoController::class, 'updateStatus']);
+        Route::delete('/{id}', [LocacaoController::class, 'destroy']);
     });
 
     // Rotas de Atividades (log global) — restrita a admin/manager

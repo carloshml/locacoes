@@ -1,12 +1,10 @@
 <template>
   <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
     <toast-message ref="toast"></toast-message>
-    <!-- Filtros Avançados -->
-    <div class="p-4 bg-gray-50 border-b space-y-4">
 
-      <!-- Filtros de Período, Cliente e Item -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 " >
-        <!-- Filtro por período -->
+    <!-- Filtros -->
+    <div class="p-4 bg-gray-50 border-b space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
           <label class="block text-gray-600 text-xs font-medium mb-1">Período (Início)</label>
           <VueDatePicker v-model="filtros.inicio" :enable-time-picker="true" :formats="dateFormats"
@@ -19,7 +17,6 @@
             model-type="yyyy-MM-dd HH:mm:ss" :start-time="{ hours: 23, minutes: 59 }" auto-apply placeholder="Até..."
             :clearable="true" :week-start="0" class="w-full" />
         </div>
-        <!-- Filtro por cliente -->
         <div>
           <label class="block text-gray-600 text-xs font-medium mb-1">Cliente</label>
           <select v-model="filtros.cliente_id" class="w-full border rounded-lg p-2 text-sm">
@@ -27,7 +24,6 @@
             <option v-for="c in clientes" :key="c.id" :value="c.id">{{ c.nome }}</option>
           </select>
         </div>
-        <!-- Filtro por item -->
         <div>
           <label class="block text-gray-600 text-xs font-medium mb-1">Item</label>
           <select v-model="filtros.item_id" class="w-full border rounded-lg p-2 text-sm">
@@ -36,17 +32,15 @@
           </select>
         </div>
       </div>
-      <!-- Botões de Filtro -->
+
       <div class="flex items-center gap-4 pb-6">
-        <div>
-          <select v-model="filtros.status" class="border rounded-lg px-3 py-2 text-sm">
-            <option value="">Todos os status</option>
-            <option value="ativo">Ativo</option>
-            <option value="cobranca">Cobrança</option>
-            <option value="finalizado">Finalizado</option>
-            <option value="cancelado">Cancelado</option>
-          </select>
-        </div>
+        <select v-model="filtros.status" class="border rounded-lg px-3 py-2 text-sm">
+          <option value="">Todos os status</option>
+          <option value="ativo">Ativo</option>
+          <option value="cobranca">Cobrança</option>
+          <option value="finalizado">Finalizado</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
         <button @click="aplicarFiltros"
           class="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition text-sm font-medium">
           Filtrar
@@ -57,13 +51,11 @@
         </button>
       </div>
 
-      <!-- SEÇÃO DE BUSCA E ITENS POR PÁGINA (ADICIONADA) -->
       <div class="flex flex-col sm:flex-row gap-4 justify-between items-center">
         <div class="relative flex-1 max-w-md">
-          <input type="text" v-model="search" placeholder="Buscar por item, cliente, localização..."
+          <input type="text" v-model="search" placeholder="Buscar por locação, cliente, item, localização..."
             class="pl-10 pr-4 py-2 border rounded-lg w-full focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
-          <svg class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor"
-            viewBox="0 0 24 24">
+          <svg class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
@@ -75,13 +67,8 @@
           <option :value="50">50 por página</option>
         </select>
       </div>
-
-
-
-      
     </div>
 
-    <!-- Loading -->
     <div v-if="loading" class="flex justify-center items-center py-16">
       <div class="text-center">
         <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mb-4"></div>
@@ -89,18 +76,15 @@
       </div>
     </div>
 
-    <!-- Error State -->
     <div v-else-if="error" class="bg-red-50 border-l-4 border-red-500 p-6 m-6 rounded-lg">
       <p class="text-red-600">{{ error }}</p>
-      <button @click="fetchLocacoes" class="mt-2 text-red-700 text-sm font-medium hover:underline">Tentar
-        novamente</button>
+      <button @click="fetchLocacoes" class="mt-2 text-red-700 text-sm font-medium hover:underline">Tentar novamente</button>
     </div>
 
-    <!-- Results -->
     <div v-else>
       <div class="bg-gradient-to-r from-amber-600 to-amber-700 px-6 py-4">
         <div class="flex justify-between items-center text-white">
-          <h2 class="text-xl font-bold">Locações de Itens</h2>
+          <h2 class="text-xl font-bold">Locações</h2>
           <span class="bg-white/20 px-3 py-1 rounded-full text-sm font-medium">Total: {{ total }}</span>
         </div>
       </div>
@@ -109,10 +93,11 @@
         <table class="w-full">
           <thead class="bg-gray-50 border-b-2 border-gray-200">
             <tr>
-              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Item</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Cliente Responsável</th>
+              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Locação</th>
+              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Itens</th>
+              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Cliente</th>
               <th @click="sortBy('location')"
-                class="px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100">
+                class="px-4 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100">
                 <div class="flex items-center gap-1">Localização <span v-if="sortKey === 'location'" class="text-xs">{{
                   sortOrder === 'asc' ? '↑' : '↓' }}</span></div>
               </th>
@@ -126,6 +111,11 @@
                 <div class="flex items-center gap-1">Fim <span v-if="sortKey === 'fim'" class="text-xs">{{
                   sortOrder === 'asc' ? '↑' : '↓' }}</span></div>
               </th>
+              <th @click="sortBy('valor')"
+                class="px-4 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100">
+                <div class="flex items-center gap-1">Valor <span v-if="sortKey === 'valor'" class="text-xs">{{
+                  sortOrder === 'asc' ? '↑' : '↓' }}</span></div>
+              </th>
               <th @click="sortBy('status')"
                 class="px-4 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100">
                 <div class="flex items-center gap-1">Status <span v-if="sortKey === 'status'" class="text-xs">{{
@@ -136,11 +126,25 @@
           </thead>
           <tbody class="divide-y divide-gray-200">
             <tr v-for="loc in locacoes" :key="loc.id" class="hover:bg-gray-50 transition-colors">
-              <td class="px-4 py-3 font-medium text-gray-900">{{ loc.item ? loc.item.name : '—' }}</td>
-              <td class="px-4 py-3 text-gray-700">{{ loc.cliente ? loc.cliente.nome : '—' }} <span v-if="loc.cliente && loc.cliente.telefone" class="text-gray-500 text-sm">· {{ loc.cliente.telefone }}</span></td>
+              <td class="px-4 py-3 font-medium text-gray-900">
+                {{ loc.nome || ('Locação #' + loc.id) }}
+              </td>
+              <td class="px-4 py-3 text-gray-700">
+                <span class="inline-flex items-center gap-1 bg-teal-50 text-teal-800 px-2 py-1 rounded-full text-xs font-semibold">
+                  {{ (loc.itens || []).length }} item(ns)
+                </span>
+                <div class="text-xs text-gray-500 mt-1">
+                  {{ (loc.itens || []).map(i => i.item ? i.item.name : '—').join(', ') }}
+                </div>
+              </td>
+              <td class="px-4 py-3 text-gray-700">
+                {{ loc.cliente ? loc.cliente.nome : '—' }}
+                <span v-if="loc.cliente && loc.cliente.telefone" class="text-gray-500 text-sm">· {{ loc.cliente.telefone }}</span>
+              </td>
               <td class="px-4 py-3 text-gray-700">{{ loc.location }}</td>
               <td class="px-4 py-3 text-gray-600 text-sm">{{ formatDate(loc.inicio) }}</td>
               <td class="px-4 py-3 text-gray-600 text-sm">{{ formatDate(loc.fim) }}</td>
+              <td class="px-4 py-3 text-gray-900 font-semibold">R$ {{ formatCurrency(loc.valor) }}</td>
               <td class="px-4 py-3">
                 <span :class="statusClass(loc.status)" class="px-2 py-1 rounded-full text-xs font-semibold">
                   {{ loc.status }}
@@ -150,8 +154,7 @@
                 <div class="flex items-center gap-2">
                   <button @click="verLoc(loc.id)" class="text-blue-600 hover:text-blue-800" title="Visualizar">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                     </svg>
@@ -159,15 +162,13 @@
                   <button @click="editLoc(loc.id)" class="text-yellow-600 hover:text-yellow-800" title="Editar">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                      </path>
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                     </svg>
                   </button>
                   <button @click="gerarContrato(loc)" class="text-indigo-600 hover:text-indigo-800" title="Gerar contrato (Word)">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                      </path>
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
                   </button>
                   <button v-if="loc.status === 'ativo'" @click="finalizarLoc(loc.id)"
@@ -179,8 +180,7 @@
                   <button @click="deleteLoc(loc.id)" class="text-red-600 hover:text-red-800" title="Excluir">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                      </path>
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                     </svg>
                   </button>
                 </div>
@@ -216,11 +216,10 @@ export default {
   components: { VueDatePicker, ToastMessage },
   data() {
     const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
     const pad = (n) => String(n).padStart(2, '0');
-    const inicioMes = `${firstDay.getFullYear()}-${pad(firstDay.getMonth() + 1)}-01 00:00:00`;
-    const fimMes = `${lastDay.getFullYear()}-${pad(lastDay.getMonth() + 1)}-${pad(lastDay.getDate())} 23:59:00`;
+    const inicioMes = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01 00:00:00`;
+    const ultimoDia = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const fimMes = `${ultimoDia.getFullYear()}-${pad(ultimoDia.getMonth() + 1)}-${pad(ultimoDia.getDate())} 23:59:00`;
 
     return {
       locacoes: [],
@@ -236,16 +235,8 @@ export default {
       totalPages: 1,
       total: 0,
       searchTimer: null,
-      dateFormats: {
-        input: 'dd.MM.yyyy - HH:mm'
-      },
-      filtros: {
-        inicio: inicioMes,
-        fim: fimMes,
-        cliente_id: '',
-        item_id: '',
-        status: ''
-      }
+      dateFormats: { input: 'dd.MM.yyyy - HH:mm' },
+      filtros: { inicio: inicioMes, fim: fimMes, cliente_id: '', item_id: '', status: '' }
     }
   },
   watch: {
@@ -284,40 +275,22 @@ export default {
       this.error = null;
       const params = new URLSearchParams();
 
-      if (this.filtros.inicio) {
-        params.append('inicio', this.formatDateForApi(this.filtros.inicio));
-      }
-      if (this.filtros.fim) {
-        params.append('fim', this.formatDateForApi(this.filtros.fim));
-      }
-      if (this.filtros.cliente_id) {
-        params.append('cliente_id', this.filtros.cliente_id);
-      }
-      if (this.filtros.item_id) {
-        params.append('item_id', this.filtros.item_id);
-      }
-      if (this.filtros.status) {
-        params.append('status', this.filtros.status);
-      }
+      if (this.filtros.inicio) params.append('inicio', this.formatDateForApi(this.filtros.inicio));
+      if (this.filtros.fim) params.append('fim', this.formatDateForApi(this.filtros.fim));
+      if (this.filtros.cliente_id) params.append('cliente_id', this.filtros.cliente_id);
+      if (this.filtros.item_id) params.append('item_id', this.filtros.item_id);
+      if (this.filtros.status) params.append('status', this.filtros.status);
 
-      // Paginacao + busca + ordenacao no servidor
       params.append('page', this.currentPage);
       params.append('per_page', this.itemsPerPage);
       params.append('sort', this.sortKey);
       params.append('order', this.sortOrder);
       if (this.search) params.append('search', this.search);
 
-      const url = '/api/locacoes/paginated?' + params.toString();
-
-      fetch(url, { headers: this.getHeaders() })
+      fetch('/api/v2/locacoes/paginated?' + params.toString(), { headers: this.getHeaders() })
         .then(res => {
-          if (res.status === 401) {
-            window.location.href = '/login';
-            return;
-          }
-          if (!res.ok) {
-            throw new Error('Erro ao carregar locações');
-          }
+          if (res.status === 401) { window.location.href = '/login'; return; }
+          if (!res.ok) throw new Error('Erro ao carregar locações');
           return res.json();
         })
         .then(data => {
@@ -335,18 +308,9 @@ export default {
           this.loading = false;
         });
     },
-    aplicarFiltros() {
-      this.currentPage = 1;
-      this.fetchLocacoes();
-    },
+    aplicarFiltros() { this.currentPage = 1; this.fetchLocacoes(); },
     limparFiltros() {
-      this.filtros = {
-        inicio: null,
-        fim: null,
-        cliente_id: '',
-        item_id: '',
-        status: ''
-      };
+      this.filtros = { inicio: null, fim: null, cliente_id: '', item_id: '', status: '' };
       this.search = '';
       this.currentPage = 1;
       this.fetchLocacoes();
@@ -360,12 +324,11 @@ export default {
     formatDate(d) {
       if (!d) return '—';
       return new Date(d).toLocaleString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
       });
+    },
+    formatCurrency(value) {
+      return Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     },
     statusClass(s) {
       if (s === 'ativo') return 'bg-green-100 text-green-800';
@@ -373,15 +336,10 @@ export default {
       if (s === 'finalizado') return 'bg-gray-100 text-gray-800';
       return 'bg-red-100 text-red-800';
     },
-    editLoc(id) {
-      window.location.href = `/locacoes/${id}/edit`;
-    },
-    verLoc(id) {
-      window.location.href = `/locacoes/${id}`;
-    },
+    editLoc(id) { window.location.href = `/locacoes/${id}/edit`; },
+    verLoc(id) { window.location.href = `/locacoes/${id}`; },
     gerarContrato(loc) {
-      // Baixa o .docx autenticado (a rota exige token Bearer).
-      fetch(`/api/locacoes/${loc.id}/contrato`, { headers: this.getHeaders() })
+      fetch(`/api/v2/locacoes/${loc.id}/contrato`, { headers: this.getHeaders() })
         .then(async res => {
           if (!res.ok) {
             const d = await res.json().catch(() => ({}));
@@ -404,8 +362,7 @@ export default {
     },
     finalizarLoc(id) {
       if (!confirm('Finalizar esta locação?')) return;
-
-      fetch(`/api/locacoes/${id}/status`, {
+      fetch(`/api/v2/locacoes/${id}/status`, {
         method: 'PATCH',
         headers: this.getHeaders(),
         body: JSON.stringify({ status: 'finalizado' })
@@ -421,12 +378,8 @@ export default {
         .catch(err => console.error('Erro:', err));
     },
     deleteLoc(id) {
-      if (!confirm('Excluir esta locação?')) return;
-
-      fetch(`/api/locacoes/${id}`, {
-        method: 'DELETE',
-        headers: this.getHeaders()
-      })
+      if (!confirm('Excluir esta locação? Os itens vinculados também serão removidos.')) return;
+      fetch(`/api/v2/locacoes/${id}`, { method: 'DELETE', headers: this.getHeaders() })
         .then(res => {
           if (res.ok) {
             this.fetchLocacoes();

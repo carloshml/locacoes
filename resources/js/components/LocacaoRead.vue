@@ -8,28 +8,24 @@
 
   <div v-else>
     <div class="bg-gradient-to-r from-amber-600 to-amber-700 px-6 py-4 rounded-xl">
-      <div class="text-white font-bold text-lg">Detalhes da Locação</div>
+      <div class="text-white font-bold text-lg">Detalhes da Locação Multi-item</div>
     </div>
 
     <div class="w-full bg-white shadow-xl rounded-xl p-8 mt-4 space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label class="block text-gray-500 text-sm">Item</label>
-          <p class="text-gray-900 font-medium text-lg">{{ locacao.item ? locacao.item.name : '—' }}</p>
+          <label class="block text-gray-500 text-sm">Locação</label>
+          <p class="text-gray-900 font-medium text-lg">{{ locacao.nome || ('Locação #' + locacao.id) }}</p>
         </div>
         <div>
-          <label class="block text-gray-500 text-sm">Valor</label>
+          <label class="block text-gray-500 text-sm">Valor Total</label>
           <p class="text-gray-900 font-bold text-lg">R$ {{ formatCurrency(locacao.valor) }}</p>
         </div>
         <div>
           <label class="block text-gray-500 text-sm">Cliente Responsável</label>
           <p class="text-gray-900 font-medium">{{ locacao.cliente ? locacao.cliente.nome : '—' }}</p>
-          <p v-if="locacao.cliente && locacao.cliente.telefone" class="text-gray-600 text-sm">
-            📞 {{ locacao.cliente.telefone }}
-          </p>
-          <p v-if="locacao.cliente && locacao.cliente.endereco" class="text-gray-600 text-sm">
-            📍 {{ locacao.cliente.endereco }}
-          </p>
+          <p v-if="locacao.cliente && locacao.cliente.telefone" class="text-gray-600 text-sm">📞 {{ locacao.cliente.telefone }}</p>
+          <p v-if="locacao.cliente && locacao.cliente.endereco" class="text-gray-600 text-sm">📍 {{ locacao.cliente.endereco }}</p>
         </div>
         <div>
           <label class="block text-gray-500 text-sm">Localização</label>
@@ -48,6 +44,37 @@
           <label class="block text-gray-500 text-sm">Fim</label>
           <p class="text-gray-900">{{ formatDate(locacao.fim) }}</p>
         </div>
+      </div>
+
+      <!-- Itens -->
+      <div class="border-t pt-4">
+        <h3 class="text-lg font-semibold text-gray-800 mb-3">Itens ({{ (locacao.itens || []).length }})</h3>
+        <table class="w-full">
+          <thead>
+            <tr class="text-left border-b">
+              <th class="pb-3 text-gray-600 font-semibold">Item</th>
+              <th class="pb-3 text-gray-600 font-semibold text-center">Qtde</th>
+              <th class="pb-3 text-gray-600 font-semibold text-right">Valor unit.</th>
+              <th class="pb-3 text-gray-600 font-semibold text-right">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="linha in locacao.itens" :key="linha.id" class="border-b last:border-0">
+              <td class="py-3 text-gray-800">{{ linha.item ? linha.item.name : '—' }}</td>
+              <td class="py-3 text-center text-gray-700">{{ linha.quantidade || 1 }}</td>
+              <td class="py-3 text-right text-gray-700">R$ {{ formatCurrency(linha.valor) }}</td>
+              <td class="py-3 text-right font-semibold text-gray-900">
+                R$ {{ formatCurrency((Number(linha.valor) || 0) * (Number(linha.quantidade) || 1)) }}
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="border-t-2">
+              <td colspan="3" class="pt-4 text-gray-800 font-bold">Total</td>
+              <td class="pt-4 text-right text-amber-700 font-bold text-lg">R$ {{ formatCurrency(locacao.valor) }}</td>
+            </tr>
+          </tfoot>
+        </table>
       </div>
 
       <div class="flex justify-end gap-4 pt-4 border-t">
@@ -82,7 +109,7 @@ export default {
     const headers = { 'Accept': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
-    fetch(`/api/locacoes/${this.id}`, { headers })
+    fetch(`/api/v2/locacoes/${this.id}`, { headers })
       .then(res => {
         if (res.status === 404) { this.error = 'Locação não encontrada'; this.loading = false; return; }
         if (res.status === 401) { window.location.href = '/login'; return; }

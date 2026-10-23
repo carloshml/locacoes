@@ -246,7 +246,7 @@
                                 </svg>
                             </div>
                             <h3 class="text-xl font-bold text-gray-800 mb-2">Locações</h3>
-                            <p class="text-gray-600">Locar itens por período com controle de ocupação</p>
+                            <p class="text-gray-600">Locações com um ou mais itens por período</p>
                             <div
                                 class="mt-4 text-indigo-600 font-semibold flex items-center gap-2 group-hover:gap-3 transition-all">
                                 Acessar

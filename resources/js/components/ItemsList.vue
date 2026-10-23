@@ -61,10 +61,10 @@
                 </div>
               </td>
               <td class="px-6 py-4 text-gray-700">{{ item.pessoa ? item.pessoa.nome : '—' }}</td>
-              <td class="px-6 py-4">
-                <span v-if="item.locacao_ativa && item.locacao_ativa.localizacao" class="inline-flex items-center gap-1 text-green-700 bg-green-50 px-2 py-1 rounded-full text-sm">
+                            <td class="px-6 py-4">
+                <span v-if="item.locacao_ativa && item.locacao_ativa.location" class="inline-flex items-center gap-1 text-green-700 bg-green-50 px-2 py-1 rounded-full text-sm">
                   <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4"/></svg>
-                  {{ item.locacao_ativa.localizacao.nome }}
+                  {{ item.locacao_ativa.location }}
                 </span>
                 <span v-else class="text-gray-400 text-sm">Sem locação ativa</span>
               </td>

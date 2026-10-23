@@ -19,12 +19,12 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     // Logout
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-    
+
     // Dashboard
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
-    
+
     // Rotas de Clientes
     Route::view('/clientes', 'clientes-list')->name('clientes.index');
     Route::get('/clientes/create', function () {
@@ -36,7 +36,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/clientes/{id}', function ($id) {
         return view('cliente-read', ['id' => $id]);
     })->name('clientes.show');
-    
+
     // Rotas de Usuários
     Route::view('/usuarios', 'users-list')->name('users.index');
     Route::get('/usuarios/create', function () {
@@ -54,7 +54,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/atividades', function () {
         return view('activities');
     })->name('activities');
-    
+
     // Rotas de Itens
     Route::view('/itens', 'itens-list')->name('itens.index');
     Route::get('/itens/create', function () {
@@ -67,7 +67,7 @@ Route::middleware('auth')->group(function () {
         return view('item-read', ['id' => $id]);
     })->name('itens.show');
 
-    // Rotas de Locação de Item
+    // Rotas de Locação (multi-item: cabeça `locacoes` + 1..N itens)
     Route::view('/locacoes', 'locacoes-list')->name('locacoes.index');
     Route::get('/locacoes/create', function () {
         return view('locacoes-create-update', ['id' => 0]);
@@ -87,7 +87,7 @@ Route::middleware('auth')->group(function () {
         abort_unless(auth()->user()->isManager(), 403);
         return view('arquivos');
     })->name('arquivos');
-    
+
     Route::get('/', function () {
         return redirect()->route('dashboard');
     });
