@@ -46,26 +46,35 @@ class AuthApiController extends Controller
 
         return response()->json([
             'token' => $token,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role,
-            ],
+            'user' => $this->userPayload($user),
         ]);
     }
 
     /** Retorna os dados do usuario autenticado pelo token. */
     public function me(Request $request)
     {
-        $user = $request->user();
+        return response()->json($this->userPayload($request->user()));
+    }
 
-        return response()->json([
+    /**
+     * Campos do usuario devolvidos ao app mobile.
+     *
+     * Inclui avatar (data URI base64), telefone, cargo e datas para a tela de
+     * perfil do app — os mesmos dados que o card "Meu Perfil" do dashboard usa.
+     */
+    private function userPayload(User $user): array
+    {
+        return [
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
             'role' => $user->role,
-        ]);
+            'avatar' => $user->avatar,
+            'phone' => $user->phone,
+            'position' => $user->position,
+            'created_at' => $user->created_at?->toIso8601String(),
+            'last_login_at' => $user->last_login_at?->toIso8601String(),
+        ];
     }
 
     /** Revoga o token atual (logout do dispositivo). */
